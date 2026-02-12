@@ -264,6 +264,27 @@ def load_data_supabase():
 
     return df[["User", "date", "steps"]]
 
+def load_roster_supabase():
+
+    response = supabase.table("users").select("*").execute()
+    data = response.data
+
+    if not data:
+        return pd.DataFrame(columns=["User", "Active from", "Active till", "Status"])
+
+    df = pd.DataFrame(data)
+
+    df = df.rename(columns={
+        "name": "User",
+        "active_from": "Active from",
+        "active_till": "Active till"
+    })
+
+    df["Status"] = "active"
+    df.loc[df["Active till"].notna(), "Status"] = "inactive"
+
+    return df[["User", "Active from", "Active till", "Status"]]
+
 st.markdown("""
 <style>
 .badge-card {
@@ -734,6 +755,7 @@ df["WeekP"] = df["date"].dt.to_period("W")
 df["Year"] = df["date"].dt.year
 df["Month"] = df["date"].dt.month
 df["Week"] = df["date"].dt.isocalendar().week
+roster_df = load_roster_supabase()
 
 #df = load_data()
 
