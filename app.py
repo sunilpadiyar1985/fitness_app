@@ -264,25 +264,6 @@ def load_data_supabase():
 
     return df[["User", "date", "steps"]]
 
-@st.cache_data
-def load_roster():
-    SHEET_ID = "1DfUJd33T-12UVOavd6SqCfkcNl8_4sVxcqqXHtBeWpw"
-    ROSTER_GID = "175789419"
-
-    url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={ROSTER_GID}"
-    r = pd.read_csv(url, dtype=str)
-
-    r.columns = r.columns.str.strip()
-
-    # ✅ normalize Status
-    r["Status"] = r["Status"].astype(str).str.strip().str.lower()
-
-    # optional (safe to keep)
-    r["Active from"] = pd.to_datetime(r["Active from"], errors="coerce", dayfirst=True)
-    r["Active till"] = pd.to_datetime(r["Active till"], errors="coerce", dayfirst=True)
-
-    return r
-
 st.markdown("""
 <style>
 .badge-card {
@@ -745,9 +726,14 @@ def build_eras(league_history, min_streak=3):
 raw_df = load_data_supabase()
 base_df = raw_df.copy()
 df = raw_df.copy()
-roster_df = load_roster()
-league_history = build_league_history(raw_df.copy(), roster_df)
 
+df["date"] = pd.to_datetime(df["date"])
+
+df["MonthP"] = df["date"].dt.to_period("M")
+df["WeekP"] = df["date"].dt.to_period("W")
+df["Year"] = df["date"].dt.year
+df["Month"] = df["date"].dt.month
+df["Week"] = df["date"].dt.isocalendar().week
 
 #df = load_data()
 
