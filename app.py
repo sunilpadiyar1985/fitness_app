@@ -92,6 +92,20 @@ top_10k        = pd.Series(dtype=int)
 top_5k         = pd.Series(dtype=int)
 top_improved   = pd.Series(dtype=float)
 
+#CVV
+
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+html, body, [class*="css"] {
+    font-family: 'Poppins', sans-serif;
+}
+
+html, body {
+    background-color: #f9fafb;
+}
+
 /* Typography */
 h1 { font-size: 2.2rem; font-weight: 700; }
 h2 { font-size: 1.7rem; font-weight: 600; }
@@ -140,7 +154,7 @@ div[data-testid="metric-container"] {
 </style>
 """, unsafe_allow_html=True)
 
-#CSV ends...
+#CVV ends...
 
 def hall_card(title, name, sub):
     st.markdown(f"""
