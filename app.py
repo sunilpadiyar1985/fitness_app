@@ -760,14 +760,14 @@ def build_eras(league_history, min_streak=3):
     return pd.DataFrame(eras)
 
 raw_df = load_data_supabase()
+raw_df = raw_df.sort_values(["User", "date"]).reset_index(drop=True)
+
 base_df = raw_df.copy()
 df = raw_df.copy()
 
 roster_df = load_roster_supabase()
 
-# date features for UI / analytics
 df["date"] = pd.to_datetime(df["date"])
-
 df["MonthP"] = df["date"].dt.to_period("M")
 df["WeekP"] = df["date"].dt.to_period("W")
 df["Year"] = df["date"].dt.year
