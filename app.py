@@ -270,6 +270,26 @@ def load_data_supabase():
 
     return steps_df[["User", "date", "steps"]]
 
+def build_complete_daily_grid(df, roster_df):
+
+    all_users = roster_df["User"].unique()
+
+    min_date = df["date"].min()
+    max_date = df["date"].max()
+
+    all_dates = pd.date_range(min_date, max_date)
+
+    full_grid = pd.MultiIndex.from_product(
+        [all_users, all_dates],
+        names=["User", "date"]
+    ).to_frame(index=False)
+
+    df = full_grid.merge(df, on=["User","date"], how="left")
+
+    df["steps"] = df["steps"].fillna(0)
+
+    return df
+
 def load_roster_supabase():
 
     response = supabase.table("users").select("*").execute()
@@ -755,6 +775,10 @@ def build_eras(league_history, min_streak=3):
     return pd.DataFrame(eras)
 
 raw_df = load_data_supabase()
+roster_df = load_roster_supabase()
+
+raw_df = build_complete_daily_grid(raw_df, roster_df)
+
 base_df = raw_df.copy()
 df = raw_df.copy()
 
@@ -3249,7 +3273,11 @@ if page == "📜 League History":
 
     latest_month = league_history["Month"].dt.to_period("M").max()
 
-    active_eras = eras[eras["End"].dt.to_period("M") == latest_month]
+    # Guard: handle no eras yet
+    if eras.empty or "End" not in eras.columns:
+        active_eras = pd.DataFrame()
+    else:
+        active_eras = eras[eras["End"].dt.to_period("M") == latest_month]
     
     active_dynasty_user = None
     
