@@ -243,52 +243,37 @@ with st.sidebar.expander("🧰 User tools", expanded=False):
 @st.cache_data
 def load_data_supabase():
 
-    # fetch steps
-    steps_resp = supabase.table("daily_health_metrics").select("*").execute()
-    steps_data = steps_resp.data
+    response = supabase.table("daily_health_metrics").select("*").execute()
+    data = response.data
 
-    if not steps_data:
-        return pd.DataFrame(columns=["User", "date", "steps"])
+    if not data:
+        return pd.DataFrame(columns=["User", "date", "steps", "MonthP"])
 
-    steps_df = pd.DataFrame(steps_data)
-    steps_df = steps_df[steps_df["metric"] == "steps"]
+    df = pd.DataFrame(data)
 
-    # fetch users for name mapping
-    users_resp = supabase.table("users").select("user_id,name").execute()
-    users_df = pd.DataFrame(users_resp.data)
+    # steps only
+    df = df[df["metric"] == "steps"]
 
     # map user_id → name
-    steps_df = steps_df.merge(users_df, on="user_id", how="left")
+    users = supabase.table("users").select("user_id,name").execute()
+    users_df = pd.DataFrame(users.data)
 
-    steps_df = steps_df.rename(columns={
+    df = df.merge(users_df, on="user_id", how="left")
+
+    df = df.rename(columns={
         "name": "User",
         "value": "steps"
     })
 
-    steps_df["date"] = pd.to_datetime(steps_df["date"])
-    steps_df["steps"] = pd.to_numeric(steps_df["steps"], errors="coerce").fillna(0)
+    df["date"] = pd.to_datetime(df["date"], errors="coerce")
+    df["steps"] = pd.to_numeric(df["steps"], errors="coerce").fillna(0)
 
-    return steps_df[["User", "date", "steps"]]
+    df = df.dropna(subset=["date"])
 
-def build_complete_daily_grid(df, roster_df):
+    # EXACT parity with Sheets loader
+    df["MonthP"] = df["date"].dt.to_period("M")
 
-    all_users = roster_df["User"].unique()
-
-    min_date = df["date"].min()
-    max_date = df["date"].max()
-
-    all_dates = pd.date_range(min_date, max_date)
-
-    full_grid = pd.MultiIndex.from_product(
-        [all_users, all_dates],
-        names=["User", "date"]
-    ).to_frame(index=False)
-
-    df = full_grid.merge(df, on=["User","date"], how="left")
-
-    df["steps"] = df["steps"].fillna(0)
-
-    return df
+    return df[["User", "date", "steps", "MonthP"]]
 
 def load_roster_supabase():
 
@@ -775,13 +760,12 @@ def build_eras(league_history, min_streak=3):
     return pd.DataFrame(eras)
 
 raw_df = load_data_supabase()
-roster_df = load_roster_supabase()
-
-raw_df = build_complete_daily_grid(raw_df, roster_df)
-
 base_df = raw_df.copy()
 df = raw_df.copy()
 
+roster_df = load_roster_supabase()
+
+# date features for UI / analytics
 df["date"] = pd.to_datetime(df["date"])
 
 df["MonthP"] = df["date"].dt.to_period("M")
@@ -789,10 +773,6 @@ df["WeekP"] = df["date"].dt.to_period("W")
 df["Year"] = df["date"].dt.year
 df["Month"] = df["date"].dt.month
 df["Week"] = df["date"].dt.isocalendar().week
-roster_df = load_roster_supabase()
-
-#df = load_data()
-
 
 league_history = build_league_history(raw_df.copy(), roster_df)
 
