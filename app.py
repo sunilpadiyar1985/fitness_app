@@ -243,26 +243,32 @@ with st.sidebar.expander("🧰 User tools", expanded=False):
 @st.cache_data
 def load_data_supabase():
 
-    response = supabase.table("daily_health_metrics").select("*").execute()
-    data = response.data
+    # fetch steps
+    steps_resp = supabase.table("daily_health_metrics").select("*").execute()
+    steps_data = steps_resp.data
 
-    if not data:
+    if not steps_data:
         return pd.DataFrame(columns=["User", "date", "steps"])
 
-    df = pd.DataFrame(data)
+    steps_df = pd.DataFrame(steps_data)
+    steps_df = steps_df[steps_df["metric"] == "steps"]
 
-    # transform into your engine format
-    df = df[df["metric"] == "steps"]
+    # fetch users for name mapping
+    users_resp = supabase.table("users").select("user_id,name").execute()
+    users_df = pd.DataFrame(users_resp.data)
 
-    df = df.rename(columns={
-        "user_id": "User",
+    # map user_id → name
+    steps_df = steps_df.merge(users_df, on="user_id", how="left")
+
+    steps_df = steps_df.rename(columns={
+        "name": "User",
         "value": "steps"
     })
 
-    df["date"] = pd.to_datetime(df["date"])
-    df["steps"] = pd.to_numeric(df["steps"], errors="coerce").fillna(0)
+    steps_df["date"] = pd.to_datetime(steps_df["date"])
+    steps_df["steps"] = pd.to_numeric(steps_df["steps"], errors="coerce").fillna(0)
 
-    return df[["User", "date", "steps"]]
+    return steps_df[["User", "date", "steps"]]
 
 def load_roster_supabase():
 
