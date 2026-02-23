@@ -280,6 +280,10 @@ def load_roster_supabase():
         "active_till": "Active till"
     })
 
+    # 🔥 ADD THESE TWO LINES
+    df["Active from"] = pd.to_datetime(df["Active from"])
+    df["Active till"] = pd.to_datetime(df["Active till"], errors="coerce")
+
     df["Status"] = "active"
     df.loc[df["Active till"].notna(), "Status"] = "inactive"
 
