@@ -760,7 +760,7 @@ roster_df = load_roster_supabase()
 #df = load_data()
 
 
-#league_history = build_league_history(base_df, roster_df)
+league_history = build_league_history(raw_df.copy(), roster_df)
 
 # ----------------------------
 # ACTIVE USERS ENGINE
