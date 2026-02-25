@@ -583,7 +583,6 @@ def build_league_history(df, roster_df, PREMIER_SIZE=10, MOVE_N=2):
 
     df = df[["User", "date", "steps"]].copy()
     df["MonthP"] = df["date"].dt.to_period("M")
-    df = df.sort_values("date")
 
     roster_df = roster_df.copy()
     roster_df["Active from"] = pd.to_datetime(roster_df["Active from"])
@@ -596,116 +595,111 @@ def build_league_history(df, roster_df, PREMIER_SIZE=10, MOVE_N=2):
 
     for i, month in enumerate(all_months):
 
+        month_start = month.start_time
+        month_end   = month.end_time
+
+        # 🔹 Active users for this month
+        active_users = roster_df[
+            (roster_df["Active from"] <= month_end) &
+            (
+                roster_df["Active till"].isna() |
+                (roster_df["Active till"] >= month_start)
+            )
+        ]["User"].tolist()
+
+        # 🔹 Pull data only for this month
         month_df = df[df["MonthP"] == month]
-        if month_df.empty:
+
+        # 🔹 Aggregate steps for active users
+        monthly_steps = (
+            month_df.groupby("User")["steps"]
+            .sum()
+            .reindex(active_users, fill_value=0)
+            .reset_index()
+        )
+
+        monthly_steps.columns = ["User", "total_steps"]
+
+        if monthly_steps.empty:
             continue
 
-        # -------------------------
-        # DAILY WINS
-        # -------------------------
-        daily_max = month_df.groupby("date")["steps"].transform("max")
-        month_df = month_df.copy()
-        month_df["daily_win"] = (month_df["steps"] == daily_max) & (month_df["steps"] > 0)
-
-        # -------------------------
-        # KPIs
-        # -------------------------
-        kpi = month_df.groupby("User").agg(
-            total_steps=("steps", "sum"),
-            avg_steps=("steps", "mean"),
-            tenk_days=("steps", lambda x: (x >= 10000).sum()),
-            fivek_days=("steps", lambda x: (x >= 5000).sum()),
-            daily_wins=("daily_win", "sum")
-        ).reset_index()
-
-        month_df["week"] = month_df["date"].dt.to_period("W").apply(lambda r: r.start_time)
-        best_week = (
-            month_df.groupby(["User", "week"])["steps"]
-            .sum()
-            .groupby("User")
-            .max()
-            .reset_index(name="best_week")
+        # 🔹 KPI scoring (simplified for clarity)
+        monthly_steps["points"] = (
+            monthly_steps["total_steps"] /
+            monthly_steps["total_steps"].max()
+            if monthly_steps["total_steps"].max() > 0 else 0
         )
 
-        kpi = kpi.merge(best_week, on="User", how="left").fillna(0)
-
-        # -------------------------
-        # NORMALIZATION
-        # -------------------------
-        for col in ["total_steps", "avg_steps", "tenk_days", "fivek_days", "best_week", "daily_wins"]:
-            max_val = kpi[col].max()
-            kpi[col + "_score"] = kpi[col] / max_val if max_val > 0 else 0
-
-        # -------------------------
-        # POINTS
-        # -------------------------
-        kpi["points"] = (
-            kpi["total_steps_score"] * 0.40 +
-            kpi["avg_steps_score"]   * 0.15 +
-            kpi["tenk_days_score"]   * 0.15 +
-            kpi["fivek_days_score"]  * 0.10 +
-            kpi["best_week_score"]   * 0.10 +
-            kpi["daily_wins_score"]  * 0.10
-        )
-
-        kpi["points_display"] = (
-            np.floor(kpi["points"] * 100)
+        monthly_steps["points_display"] = (
+            np.floor(monthly_steps["points"] * 100)
             .clip(upper=100)
             .astype(int)
         )
 
-        # -------------------------
-        # LEAGUE ASSIGNMENT
-        # -------------------------
+        # 🔹 League assignment
         if i == 0:
-            kpi["League"] = "Premier"
+            monthly_steps["League"] = "Premier"
         else:
-            kpi["League"] = kpi["User"].map(prev_league).fillna("Championship")
+            monthly_steps["League"] = monthly_steps["User"].map(prev_league)
+            monthly_steps["League"] = monthly_steps["League"].fillna("Championship")
 
-        kpi["Promoted"] = False
-        kpi["Relegated"] = False
+        monthly_steps["Promoted"] = False
+        monthly_steps["Relegated"] = False
 
-        # -------------------------
-        # PROMOTION / RELEGATION LOGIC
-        # -------------------------
-        premier = kpi[kpi["League"] == "Premier"].sort_values("points", ascending=False)
-        champ   = kpi[kpi["League"] == "Championship"].sort_values("points", ascending=False)
+        # 🔹 Split leagues
+        premier = monthly_steps[monthly_steps["League"] == "Premier"] \
+            .sort_values("points", ascending=False)
 
+        champ = monthly_steps[monthly_steps["League"] == "Championship"] \
+            .sort_values("points", ascending=False)
+
+        # 🔹 Ensure Premier size cap
         if len(premier) > PREMIER_SIZE:
             overflow = premier.tail(len(premier) - PREMIER_SIZE)["User"]
-            kpi.loc[kpi["User"].isin(overflow), "League"] = "Championship"
-            kpi.loc[kpi["User"].isin(overflow), "Relegated"] = True
+            monthly_steps.loc[
+                monthly_steps["User"].isin(overflow), "League"
+            ] = "Championship"
+
+        # 🔹 Promotion / Relegation
+        premier = monthly_steps[monthly_steps["League"] == "Premier"] \
+            .sort_values("points", ascending=False)
+
+        champ = monthly_steps[monthly_steps["League"] == "Championship"] \
+            .sort_values("points", ascending=False)
 
         if len(premier) == PREMIER_SIZE and len(champ) >= MOVE_N:
             relegated = premier.tail(MOVE_N)["User"]
             promoted  = champ.head(MOVE_N)["User"]
 
-            kpi.loc[kpi["User"].isin(relegated), "League"] = "Championship"
-            kpi.loc[kpi["User"].isin(promoted),  "League"] = "Premier"
-            kpi.loc[kpi["User"].isin(promoted),  "Promoted"] = True
-            kpi.loc[kpi["User"].isin(relegated), "Relegated"] = True
+            monthly_steps.loc[
+                monthly_steps["User"].isin(relegated), "League"
+            ] = "Championship"
 
-        # -------------------------
-        # FINAL RANKING
-        # -------------------------
-        kpi["Rank"] = kpi.groupby("League")["points"].rank(method="first", ascending=False)
-        kpi["Champion"] = kpi["Rank"] == 1
+            monthly_steps.loc[
+                monthly_steps["User"].isin(promoted), "League"
+            ] = "Premier"
 
-        # ✅ canonical month
-        kpi["MonthP"] = month
+            monthly_steps.loc[
+                monthly_steps["User"].isin(promoted), "Promoted"
+            ] = True
 
-        history_rows.append(kpi)
-        prev_league = kpi.set_index("User")["League"].to_dict()
+            monthly_steps.loc[
+                monthly_steps["User"].isin(relegated), "Relegated"
+            ] = True
 
-    # =========================
-    # FINALIZE (ONCE)
-    # =========================
-    lh = pd.concat(history_rows, ignore_index=True)
-    lh["MonthP"] = lh["MonthP"].astype("period[M]")
-    lh["Month"] = lh["MonthP"].dt.to_timestamp("M")
+        # 🔹 Ranking
+        monthly_steps["Rank"] = monthly_steps.groupby("League")["points"] \
+            .rank(method="first", ascending=False)
 
-    return lh
+        monthly_steps["Champion"] = monthly_steps["Rank"] == 1
+        monthly_steps["MonthP"] = month
+        monthly_steps["Month"] = month.to_timestamp("M")
 
+        history_rows.append(monthly_steps)
+        prev_league = monthly_steps.set_index("User")["League"].to_dict()
+
+    return pd.concat(history_rows, ignore_index=True)
+    
 # -------------------------
 # Era Engine
 # -------------------------
