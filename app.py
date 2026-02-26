@@ -1851,7 +1851,8 @@ if page == "🏆 Hall of Fame":
     
     st.markdown("<br>", unsafe_allow_html=True)
 
-    d = df.copy().sort_values("date")
+    #d = df.copy().sort_values("date")
+    d = raw_df.copy().sort_values("date")
 
     # Trim future empty days
     if (d["steps"] > 0).any():
