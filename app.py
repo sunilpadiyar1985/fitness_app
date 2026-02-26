@@ -243,13 +243,31 @@ with st.sidebar.expander("🧰 User tools", expanded=False):
 @st.cache_data
 def load_data_supabase():
 
-    response = supabase.table("daily_health_metrics").select("*").execute()
-    data = response.data
+    all_rows = []
+    start = 0
+    batch_size = 1000
 
-    if not data:
+    while True:
+        response = (
+            supabase
+            .table("daily_health_metrics")
+            .select("*")
+            .range(start, start + batch_size - 1)
+            .execute()
+        )
+
+        data = response.data
+
+        if not data:
+            break
+
+        all_rows.extend(data)
+        start += batch_size
+
+    if not all_rows:
         return pd.DataFrame(columns=["User", "date", "steps", "MonthP"])
 
-    df = pd.DataFrame(data)
+    df = pd.DataFrame(all_rows)
 
     # steps only
     df = df[df["metric"] == "steps"]
@@ -269,8 +287,6 @@ def load_data_supabase():
     df["steps"] = pd.to_numeric(df["steps"], errors="coerce").fillna(0)
 
     df = df.dropna(subset=["date"])
-
-    # EXACT parity with Sheets loader
     df["MonthP"] = df["date"].dt.to_period("M")
 
     return df[["User", "date", "steps", "MonthP"]]
