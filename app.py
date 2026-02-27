@@ -821,6 +821,11 @@ def build_eras(league_history, min_streak=3):
 
     return pd.DataFrame(eras)
 
+# ======================================================
+# 🧱 STREAK ENGINE — CANONICAL (USE EVERYWHERE)
+# ======================================================
+
+
 def build_user_calendar(df, user):
     u = df[df["User"] == user][["date","steps"]].copy()
     if u.empty:
@@ -844,6 +849,73 @@ def build_user_calendar(df, user):
     u = u.rename(columns={"index":"date"})
 
     return u
+
+def max_streak_from_bool(series):
+    max_s = cur = 0
+    for v in series:
+        if v:
+            cur += 1
+            max_s = max(max_s, cur)
+        else:
+            cur = 0
+    return max_s
+
+
+def current_streak_from_bool(series):
+    cur = 0
+    for v in reversed(series):
+        if v:
+            cur += 1
+        else:
+            break
+    return cur
+
+def analyze_streaks(series, dates):
+    max_len = 0
+    cur_len = 0
+
+    max_end = None
+    max_start = None
+
+    cur_start = None
+
+    for i, v in enumerate(series):
+        if v:
+            if cur_len == 0:
+                cur_start = dates[i]
+            cur_len += 1
+
+            if cur_len > max_len:
+                max_len = cur_len
+                max_end = dates[i]
+                max_start = cur_start
+        else:
+            cur_len = 0
+            cur_start = None
+
+    # current streak (from end)
+    cur_len2 = 0
+    cur_start2 = None
+
+    for i in range(len(series)-1, -1, -1):
+        if series[i]:
+            if cur_len2 == 0:
+                cur_start2 = dates[i]
+            cur_len2 += 1
+        else:
+            break
+
+    cur_end2 = dates[-1] if cur_len2 > 0 else None
+
+    return {
+        "max": max_len,
+        "max_start": max_start,
+        "max_end": max_end,
+        "current": cur_len2,
+        "current_start": cur_start2,
+        "current_end": cur_end2
+    }
+
 
 def compute_user_streaks(df, user):
 
@@ -962,77 +1034,6 @@ def detect_all_time_records(df):
     return pd.DataFrame(records)
 
 
-# ======================================================
-# 🧱 STREAK ENGINE — CANONICAL (USE EVERYWHERE)
-# ======================================================
-
-
-
-def max_streak_from_bool(series):
-    max_s = cur = 0
-    for v in series:
-        if v:
-            cur += 1
-            max_s = max(max_s, cur)
-        else:
-            cur = 0
-    return max_s
-
-
-def current_streak_from_bool(series):
-    cur = 0
-    for v in reversed(series):
-        if v:
-            cur += 1
-        else:
-            break
-    return cur
-
-def analyze_streaks(series, dates):
-    max_len = 0
-    cur_len = 0
-
-    max_end = None
-    max_start = None
-
-    cur_start = None
-
-    for i, v in enumerate(series):
-        if v:
-            if cur_len == 0:
-                cur_start = dates[i]
-            cur_len += 1
-
-            if cur_len > max_len:
-                max_len = cur_len
-                max_end = dates[i]
-                max_start = cur_start
-        else:
-            cur_len = 0
-            cur_start = None
-
-    # current streak (from end)
-    cur_len2 = 0
-    cur_start2 = None
-
-    for i in range(len(series)-1, -1, -1):
-        if series[i]:
-            if cur_len2 == 0:
-                cur_start2 = dates[i]
-            cur_len2 += 1
-        else:
-            break
-
-    cur_end2 = dates[-1] if cur_len2 > 0 else None
-
-    return {
-        "max": max_len,
-        "max_start": max_start,
-        "max_end": max_end,
-        "current": cur_len2,
-        "current_start": cur_start2,
-        "current_end": cur_end2
-    }
 
 
 # ----------------------------
