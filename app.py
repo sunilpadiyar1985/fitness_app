@@ -821,7 +821,6 @@ def build_eras(league_history, min_streak=3):
 
     return pd.DataFrame(eras)
 
-@st.cache_data(ttl=1800)
 raw_df = load_data_supabase()
 all_streaks = build_all_user_streaks(raw_df)
 st.sidebar.caption(f"📦 Rows loaded: {len(raw_df):,}")
@@ -1024,6 +1023,7 @@ def compute_user_streaks(df, user):
         "active5": s5a
     }
     
+@st.cache_data(ttl=1800)
 def build_all_user_streaks(df):
     streaks = {}
     for user in df["User"].unique():
