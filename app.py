@@ -821,6 +821,33 @@ def build_eras(league_history, min_streak=3):
 
     return pd.DataFrame(eras)
 
+def compute_user_streaks(df, user):
+
+    u = build_user_calendar(df, user)
+    if u.empty:
+        return None
+
+    dates = u["date"].tolist()
+
+    s10 = analyze_streaks((u["steps"] >= 10000).tolist(), dates)
+    s5z = analyze_streaks(((u["steps"] >= 5000) & (u["steps"] < 10000)).tolist(), dates)
+    s5a = analyze_streaks((u["steps"] >= 5000).tolist(), dates)
+
+    return {
+        "10k": s10,
+        "5k_zone": s5z,
+        "active5": s5a
+    }
+    
+@st.cache_data(ttl=1800)
+def build_all_user_streaks(df):
+    streaks = {}
+    for user in df["User"].unique():
+        s = compute_user_streaks(df, user)
+        if s:
+            streaks[user] = s
+    return streaks
+
 raw_df = load_data_supabase()
 all_streaks = build_all_user_streaks(raw_df)
 st.sidebar.caption(f"📦 Rows loaded: {len(raw_df):,}")
@@ -1004,33 +1031,6 @@ def analyze_streaks(series, dates):
         "current_start": cur_start2,
         "current_end": cur_end2
     }
-
-def compute_user_streaks(df, user):
-
-    u = build_user_calendar(df, user)
-    if u.empty:
-        return None
-
-    dates = u["date"].tolist()
-
-    s10 = analyze_streaks((u["steps"] >= 10000).tolist(), dates)
-    s5z = analyze_streaks(((u["steps"] >= 5000) & (u["steps"] < 10000)).tolist(), dates)
-    s5a = analyze_streaks((u["steps"] >= 5000).tolist(), dates)
-
-    return {
-        "10k": s10,
-        "5k_zone": s5z,
-        "active5": s5a
-    }
-    
-@st.cache_data(ttl=1800)
-def build_all_user_streaks(df):
-    streaks = {}
-    for user in df["User"].unique():
-        s = compute_user_streaks(df, user)
-        if s:
-            streaks[user] = s
-    return streaks
 
 
 # ----------------------------
