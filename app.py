@@ -240,56 +240,56 @@ with st.sidebar.expander("🧰 User tools", expanded=False):
 # ----------------------------
 # LOAD DATA (MULTI YEAR, SAFE)
 # ----------------------------
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=1800)
 def load_data_supabase():
+    try:
+        all_rows = []
+        start = 0
+        batch_size = 1000
 
-    all_rows = []
-    start = 0
-    batch_size = 1000
+        while True:
+            response = (
+                supabase
+                .table("daily_health_metrics")
+                .select("*")
+                .range(start, start + batch_size - 1)
+                .execute()
+            )
 
-    while True:
-        response = (
-            supabase
-            .table("daily_health_metrics")
-            .select("*")
-            .range(start, start + batch_size - 1)
-            .execute()
-        )
+            data = response.data
+            if not data:
+                break
 
-        data = response.data
+            all_rows.extend(data)
+            start += batch_size
 
-        if not data:
-            break
+        if not all_rows:
+            st.warning("No data returned from database.")
+            return pd.DataFrame(columns=["User","date","steps","MonthP"])
 
-        all_rows.extend(data)
-        start += batch_size
+        df = pd.DataFrame(all_rows)
 
-    if not all_rows:
-        return pd.DataFrame(columns=["User", "date", "steps", "MonthP"])
+        df = df[df["metric"] == "steps"]
 
-    df = pd.DataFrame(all_rows)
+        users = supabase.table("users").select("user_id,name").execute()
+        users_df = pd.DataFrame(users.data)
 
-    # steps only
-    df = df[df["metric"] == "steps"]
+        df = df.merge(users_df, on="user_id", how="left")
 
-    # map user_id → name
-    users = supabase.table("users").select("user_id,name").execute()
-    users_df = pd.DataFrame(users.data)
+        df = df.rename(columns={"name": "User", "value": "steps"})
 
-    df = df.merge(users_df, on="user_id", how="left")
+        df["date"] = pd.to_datetime(df["date"], errors="coerce")
+        df["steps"] = pd.to_numeric(df["steps"], errors="coerce").fillna(0)
+        df = df.dropna(subset=["date"])
 
-    df = df.rename(columns={
-        "name": "User",
-        "value": "steps"
-    })
+        df["MonthP"] = df["date"].dt.to_period("M")
 
-    df["date"] = pd.to_datetime(df["date"], errors="coerce")
-    df["steps"] = pd.to_numeric(df["steps"], errors="coerce").fillna(0)
+        return df[["User","date","steps","MonthP"]]
 
-    df = df.dropna(subset=["date"])
-    df["MonthP"] = df["date"].dt.to_period("M")
-
-    return df[["User", "date", "steps", "MonthP"]]
+    except Exception as e:
+        st.error("Database connection failed.")
+        st.exception(e)
+        return pd.DataFrame(columns=["User","date","steps","MonthP"])
 
 def load_roster_supabase():
 
@@ -591,14 +591,26 @@ def render_badge_cabinet(earned_ids):
     render_badge_section("🥈 Silver", "Silver", earned_ids)
     render_badge_section("🥇 Gold", "Gold", earned_ids)
     render_badge_section("💎 Legendary", "Legendary", earned_ids)
+
+
 #-------------------
 #League Engine
 #-------------------
 
-def build_league_history(df, roster_df, PREMIER_SIZE=10, MOVE_N=2):
+@st.cache_data(ttl=1800)
+def build_monthly_df(raw_df):
+    monthly = (
+        raw_df
+        .groupby(["User","MonthP"])["steps"]
+        .sum()
+        .reset_index()
+    )
+    return monthly
 
-    df = df[["User", "date", "steps"]].copy()
-    df["MonthP"] = df["date"].dt.to_period("M")
+
+def build_league_history(monthly_df, roster_df, PREMIER_SIZE=10, MOVE_N=2):
+
+    df = monthly_df.copy()
 
     roster_df = roster_df.copy()
     roster_df["Active from"] = pd.to_datetime(roster_df["Active from"])
@@ -614,7 +626,7 @@ def build_league_history(df, roster_df, PREMIER_SIZE=10, MOVE_N=2):
         month_start = month.start_time
         month_end   = month.end_time
 
-        # 🔹 Active users for this month
+        # 🔹 Active users this month
         active_users = roster_df[
             (roster_df["Active from"] <= month_end) &
             (
@@ -623,13 +635,12 @@ def build_league_history(df, roster_df, PREMIER_SIZE=10, MOVE_N=2):
             )
         ]["User"].tolist()
 
-        # 🔹 Pull data only for this month
+        # 🔹 Pull monthly totals
         month_df = df[df["MonthP"] == month]
 
-        # 🔹 Aggregate steps for active users
+        # 🔹 Align to active users
         monthly_steps = (
-            month_df.groupby("User")["steps"]
-            .sum()
+            month_df.set_index("User")["steps"]
             .reindex(active_users, fill_value=0)
             .reset_index()
         )
@@ -639,11 +650,10 @@ def build_league_history(df, roster_df, PREMIER_SIZE=10, MOVE_N=2):
         if monthly_steps.empty:
             continue
 
-        # 🔹 KPI scoring (simplified for clarity)
+        # 🔹 Points
+        max_steps = monthly_steps["total_steps"].max()
         monthly_steps["points"] = (
-            monthly_steps["total_steps"] /
-            monthly_steps["total_steps"].max()
-            if monthly_steps["total_steps"].max() > 0 else 0
+            monthly_steps["total_steps"] / max_steps if max_steps > 0 else 0
         )
 
         monthly_steps["points_display"] = (
@@ -662,27 +672,27 @@ def build_league_history(df, roster_df, PREMIER_SIZE=10, MOVE_N=2):
         monthly_steps["Promoted"] = False
         monthly_steps["Relegated"] = False
 
+        # 🔹 Sort for ranking
+        monthly_steps = monthly_steps.sort_values("points", ascending=False)
+
         # 🔹 Split leagues
-        premier = monthly_steps[monthly_steps["League"] == "Premier"] \
-            .sort_values("points", ascending=False)
+        premier = monthly_steps[monthly_steps["League"] == "Premier"]
+        champ   = monthly_steps[monthly_steps["League"] == "Championship"]
 
-        champ = monthly_steps[monthly_steps["League"] == "Championship"] \
-            .sort_values("points", ascending=False)
-
-        # 🔹 Ensure Premier size cap
+        # 🔹 Enforce Premier size cap
         if len(premier) > PREMIER_SIZE:
             overflow = premier.tail(len(premier) - PREMIER_SIZE)["User"]
             monthly_steps.loc[
                 monthly_steps["User"].isin(overflow), "League"
             ] = "Championship"
 
-        # 🔹 Promotion / Relegation
+        # 🔹 Recalculate splits
         premier = monthly_steps[monthly_steps["League"] == "Premier"] \
             .sort_values("points", ascending=False)
-
         champ = monthly_steps[monthly_steps["League"] == "Championship"] \
             .sort_values("points", ascending=False)
 
+        # 🔹 Promotion / Relegation
         if len(premier) == PREMIER_SIZE and len(champ) >= MOVE_N:
             relegated = premier.tail(MOVE_N)["User"]
             promoted  = champ.head(MOVE_N)["User"]
@@ -703,9 +713,12 @@ def build_league_history(df, roster_df, PREMIER_SIZE=10, MOVE_N=2):
                 monthly_steps["User"].isin(relegated), "Relegated"
             ] = True
 
-        # 🔹 Ranking
-        monthly_steps["Rank"] = monthly_steps.groupby("League")["points"] \
+        # 🔹 Ranking per league
+        monthly_steps["Rank"] = (
+            monthly_steps
+            .groupby("League")["points"]
             .rank(method="first", ascending=False)
+        )
 
         monthly_steps["Champion"] = monthly_steps["Rank"] == 1
         monthly_steps["MonthP"] = month
@@ -715,6 +728,45 @@ def build_league_history(df, roster_df, PREMIER_SIZE=10, MOVE_N=2):
         prev_league = monthly_steps.set_index("User")["League"].to_dict()
 
     return pd.concat(history_rows, ignore_index=True)
+
+@st.cache_data(ttl=1800)
+def compute_league(monthly_df, roster_df):
+    return build_league_history(monthly_df, roster_df)
+
+def validate_league_integrity(league_history, PREMIER_SIZE=10, MOVE_N=2):
+
+    issues = []
+
+    if league_history.empty:
+        issues.append("League history is empty.")
+        return issues
+
+    for month, group in league_history.groupby("MonthP"):
+
+        prem = group[group["League"] == "Premier"]
+        champ = group[group["League"] == "Championship"]
+
+        # 1️⃣ Premier size check
+        if len(prem) > PREMIER_SIZE:
+            issues.append(f"{month}: Premier exceeds {PREMIER_SIZE} players")
+
+        # 2️⃣ Duplicate user check
+        if group["User"].duplicated().any():
+            issues.append(f"{month}: Duplicate users detected")
+
+        # 3️⃣ User in both leagues check
+        overlap = set(prem["User"]).intersection(set(champ["User"]))
+        if overlap:
+            issues.append(f"{month}: User appears in both leagues → {overlap}")
+
+        # 4️⃣ Promotion / Relegation symmetry check
+        promoted = group[group["Promoted"] == True]
+        relegated = group[group["Relegated"] == True]
+
+        if len(promoted) != len(relegated):
+            issues.append(f"{month}: Promotion/Relegation mismatch")
+
+    return issues
     
 # -------------------------
 # Era Engine
@@ -769,8 +821,23 @@ def build_eras(league_history, min_streak=3):
 
     return pd.DataFrame(eras)
 
+@st.cache_data(ttl=1800)
+def build_all_user_streaks(df):
+    streaks = {}
+    for user in df["User"].unique():
+        s = compute_user_streaks(df, user)
+        if s:
+            streaks[user] = s
+    return streaks
+
+
 raw_df = load_data_supabase()
+all_streaks = build_all_user_streaks(raw_df)
+st.sidebar.caption(f"📦 Rows loaded: {len(raw_df):,}")
+last_sync = raw_df["date"].max()
+st.sidebar.caption(f"🕒 Last data date: {last_sync.date()}")
 raw_df = raw_df.sort_values(["User", "date"]).reset_index(drop=True)
+monthly_df = build_monthly_df(raw_df)
 
 base_df = raw_df.copy()
 df = raw_df.copy()
@@ -784,7 +851,14 @@ df["Year"] = df["date"].dt.year
 df["Month"] = df["date"].dt.month
 df["Week"] = df["date"].dt.isocalendar().week
 
-league_history = build_league_history(raw_df.copy(), roster_df)
+league_history = compute_league(monthly_df, roster_df)
+
+integrity_issues = validate_league_integrity(league_history)
+
+if integrity_issues:
+    with st.sidebar.expander("🚨 League Integrity Warning", expanded=True):
+        for issue in integrity_issues:
+            st.error(issue)
 
 # ----------------------------
 # ACTIVE USERS ENGINE
@@ -979,7 +1053,7 @@ def recent_record_breaks(records_df, current_month, window_days=7):
 # ----------------------------
 # 🧠 LEAGUE EVENTS + NARRATIVE ENGINE
 # ----------------------------
-@st.cache_data
+@st.cache_data(ttl=1800)
 def build_league_events(df, league_history):
 
     d = df.copy()
@@ -997,7 +1071,7 @@ def build_league_events(df, league_history):
     best_active5 = 0
     
     for user in d["User"].unique():
-        s = compute_user_streaks(d, user)
+        s = all_streaks.get(user)
         if not s:
             continue
     
@@ -1906,7 +1980,7 @@ if page == "🏆 Hall of Fame":
     current_active5 = {}
     
     for user in d["User"].unique():
-        s = compute_user_streaks(d, user)
+        s = all_streaks.get(user)
         if not s:
             continue
     
