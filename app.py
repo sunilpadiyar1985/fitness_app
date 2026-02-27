@@ -821,6 +821,30 @@ def build_eras(league_history, min_streak=3):
 
     return pd.DataFrame(eras)
 
+def build_user_calendar(df, user):
+    u = df[df["User"] == user][["date","steps"]].copy()
+    if u.empty:
+        return pd.DataFrame(columns=["date","steps"])
+
+    u = u.sort_values("date")
+
+    # ✅ only days where user ever existed in the league
+    first_active = u.loc[u["steps"] > 0, "date"].min()
+    last_active  = u.loc[u["steps"] > 0, "date"].max()
+
+    if pd.isna(first_active) or pd.isna(last_active):
+        return pd.DataFrame(columns=["date","steps"])
+
+    u = u[(u["date"] >= first_active) & (u["date"] <= last_active)]
+    u = u.set_index("date")
+
+    full_range = pd.date_range(first_active, last_active, freq="D")
+
+    u = u.reindex(full_range, fill_value=0).reset_index()
+    u = u.rename(columns={"index":"date"})
+
+    return u
+
 def compute_user_streaks(df, user):
 
     u = build_user_calendar(df, user)
@@ -942,29 +966,7 @@ def detect_all_time_records(df):
 # 🧱 STREAK ENGINE — CANONICAL (USE EVERYWHERE)
 # ======================================================
 
-def build_user_calendar(df, user):
-    u = df[df["User"] == user][["date","steps"]].copy()
-    if u.empty:
-        return pd.DataFrame(columns=["date","steps"])
 
-    u = u.sort_values("date")
-
-    # ✅ only days where user ever existed in the league
-    first_active = u.loc[u["steps"] > 0, "date"].min()
-    last_active  = u.loc[u["steps"] > 0, "date"].max()
-
-    if pd.isna(first_active) or pd.isna(last_active):
-        return pd.DataFrame(columns=["date","steps"])
-
-    u = u[(u["date"] >= first_active) & (u["date"] <= last_active)]
-    u = u.set_index("date")
-
-    full_range = pd.date_range(first_active, last_active, freq="D")
-
-    u = u.reindex(full_range, fill_value=0).reset_index()
-    u = u.rename(columns={"index":"date"})
-
-    return u
 
 def max_streak_from_bool(series):
     max_s = cur = 0
