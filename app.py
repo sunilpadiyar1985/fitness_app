@@ -822,15 +822,6 @@ def build_eras(league_history, min_streak=3):
     return pd.DataFrame(eras)
 
 @st.cache_data(ttl=1800)
-def build_all_user_streaks(df):
-    streaks = {}
-    for user in df["User"].unique():
-        s = compute_user_streaks(df, user)
-        if s:
-            streaks[user] = s
-    return streaks
-
-
 raw_df = load_data_supabase()
 all_streaks = build_all_user_streaks(raw_df)
 st.sidebar.caption(f"📦 Rows loaded: {len(raw_df):,}")
@@ -1032,6 +1023,15 @@ def compute_user_streaks(df, user):
         "5k_zone": s5z,
         "active5": s5a
     }
+    
+def build_all_user_streaks(df):
+    streaks = {}
+    for user in df["User"].unique():
+        s = compute_user_streaks(df, user)
+        if s:
+            streaks[user] = s
+    return streaks
+
 
 # ----------------------------
 # recent record moments Engine
