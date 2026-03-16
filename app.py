@@ -607,8 +607,79 @@ def build_monthly_df(raw_df):
     )
     return monthly
 
+def compute_month_metrics(raw_df, month, users):
 
-def build_league_history(monthly_df, roster_df, PREMIER_SIZE=10, MOVE_N=2):
+    mdf = raw_df[raw_df["MonthP"] == month]
+    mdf = mdf[mdf["User"].isin(users)]
+
+    if mdf.empty:
+        return None
+
+    base = mdf.groupby("User")
+
+    metrics = pd.DataFrame({
+        "User": users
+    })
+
+    metrics = metrics.set_index("User")
+
+    metrics["total_steps"] = base["steps"].sum()
+    metrics["avg_steps"] = base["steps"].mean()
+    metrics["days_10k"] = base["steps"].apply(lambda x: (x >= 10000).sum())
+    metrics["days_5k"] = base["steps"].apply(lambda x: (x >= 5000).sum())
+
+    # best week
+    mdf["week"] = mdf["date"].dt.to_period("W")
+    weekly = mdf.groupby(["User","week"])["steps"].sum()
+    metrics["best_week"] = weekly.groupby("User").max()
+
+    # daily wins
+    daily_winner = (
+        mdf.sort_values("steps", ascending=False)
+        .groupby("date")
+        .first()["User"]
+        .value_counts()
+    )
+
+    metrics["daily_wins"] = daily_winner
+
+    metrics = metrics.fillna(0)
+
+    return metrics.reset_index()
+
+def compute_points(metrics):
+
+    weights = {
+        "total_steps": 0.40,
+        "avg_steps": 0.15,
+        "days_10k": 0.15,
+        "days_5k": 0.10,
+        "best_week": 0.10,
+        "daily_wins": 0.10
+    }
+
+    scores = pd.DataFrame()
+    scores["User"] = metrics["User"]
+
+    total_score = 0
+
+    for col, w in weights.items():
+
+        max_val = metrics[col].max()
+
+        if max_val > 0:
+            norm = metrics[col] / max_val
+        else:
+            norm = 0
+
+        total_score += norm * w
+
+    scores["points"] = total_score
+    scores["points_display"] = (scores["points"] * 100).astype(int)
+
+    return scores
+
+def build_league_history(monthly_df, roster_df, raw_df, PREMIER_SIZE=10, MOVE_N=2):
 
     df = monthly_df.copy()
     roster_df = roster_df.copy()
@@ -655,14 +726,15 @@ def build_league_history(monthly_df, roster_df, PREMIER_SIZE=10, MOVE_N=2):
         # -----------------------------
         # POINTS
         # -----------------------------
-        max_steps = m["total_steps"].max()
+        metrics = compute_month_metrics(raw_df, month, active_users)
 
-        if max_steps > 0:
-            m["points"] = m["total_steps"] / max_steps
-        else:
-            m["points"] = 0
-
-        m["points_display"] = (m["points"] * 100).astype(int)
+        scores = compute_points(metrics)
+        
+        m = scores.merge(
+            metrics[["User","total_steps"]],
+            on="User",
+            how="left"
+        )
 
         # -----------------------------
         # FIRST MONTH
@@ -748,8 +820,8 @@ def build_league_history(monthly_df, roster_df, PREMIER_SIZE=10, MOVE_N=2):
     return pd.concat(history, ignore_index=True)
 
 @st.cache_data(ttl=1800)
-def compute_league(monthly_df, roster_df):
-    return build_league_history(monthly_df, roster_df)
+def compute_league(monthly_df, roster_df, raw_df):
+    return build_league_history(monthly_df, roster_df, raw_df)
 
 def validate_league_integrity(league_history, PREMIER_SIZE=10, MOVE_N=2):
 
@@ -982,7 +1054,7 @@ df["Year"] = df["date"].dt.year
 df["Month"] = df["date"].dt.month
 df["Week"] = df["date"].dt.isocalendar().week
 
-league_history = compute_league(monthly_df, roster_df)
+league_history = compute_league(monthly_df, roster_df, raw_df)
 
 integrity_issues = validate_league_integrity(league_history)
 
