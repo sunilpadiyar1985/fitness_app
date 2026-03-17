@@ -3045,6 +3045,14 @@ if page == "👤 Player Profile":
     st.markdown("###### 📈 League journey (career path)")
 
     chart_df = player_lh.sort_values("Month").copy()
+
+    # 🔥 Merge metrics
+    if "debug_metrics" in locals():
+        chart_df = chart_df.merge(
+            debug_metrics,
+            on=["User", "MonthP"],
+            how="left"
+        )
     
     PREMIER_SIZE = 10
     
@@ -3077,12 +3085,12 @@ if page == "👤 Player Profile":
         f"League: {r['League']}<br>"
         f"Rank: #{int(r['Rank'])}<br>"
         f"Points: {int(r['points_display'])}<br>"
-        f"Total steps: {int(r['total_steps']):,}<br>"
-        f"Avg steps: {int(r['avg_steps']):,}<br>"
-        f"Best week: {int(r['best_week']):,}<br>"
-        f"10K days: {int(r['tenk_days'])}<br>"
-        f"5K days: {int(r['fivek_days'])}<br>"
-        f"Daily wins: {int(r['daily_wins'])}"
+        f"Total steps: {int(r.get('total_steps', 0)):,}<br>"
+        f"Avg steps: {int(r.get('avg_steps', 0)):,}<br>"
+        f"Best week: {int(r.get('best_week', 0)):,}<br>"
+        f"10K days: {int(r.get('days_10k', 0))}<br>"
+        f"5K days: {int(r.get('days_5k', 0))}<br>"
+        f"Daily wins: {int(r.get('daily_wins', 0))}"
     ), axis=1)
     
     # ------------------------------------------------
