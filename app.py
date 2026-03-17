@@ -3379,7 +3379,7 @@ if page == "📜 League History":
     
     with b5:
         if not champ_no_title.empty:
-            hall_card("⚔️ Championship runner-ups", champ_no_title.index[0[], f"↑ {int(champ_no_title.iloc[0])}")
+            hall_card("⚔️ Championship runner-ups", champ_no_title.index[0], f"↑ {int(champ_no_title.iloc[0])}")
     
     with b6:
         if dynasties:
