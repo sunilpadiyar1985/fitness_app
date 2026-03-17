@@ -3372,12 +3372,16 @@ if page == "📜 League History":
     with b3:
         if not prem_no_title.empty:
             hall_card("⚔️ Premier runner-ups", prem_no_title.index[0], f"↑ {int(prem_no_title.iloc[0])}")
-    
+
     with b4:
+        if not champ_no_title.empty:
+            hall_card("🏅 Most Championship titles", champ_titles.index[0[], f"↑ {int(champ_titles.iloc[0])}")
+    
+    with b5:
         if not champ_no_title.empty:
             hall_card("⚔️ Championship runner-ups", champ_no_title.index[0], f"↑ {int(champ_no_title.iloc[0])}")
     
-    with b5:
+    with b6:
         if dynasties:
             hall_card("👑 Dynasty", dynasties[0]["User"], "Legend status")
 
