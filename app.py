@@ -3327,7 +3327,7 @@ if page == "📜 League History":
     # =====================================================
     st.markdown("##### 🏟️ Hall of Champions")
 
-    b1, b2, b3, b4, b5 = st.columns(5)
+    b1, b2, b3, b4, b5, b6 = st.columns(6)
     eras = build_eras(league_history, min_streak=2)
     
     longest = (
