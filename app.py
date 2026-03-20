@@ -25,7 +25,7 @@ if (width < 768) {
 """, unsafe_allow_html=True)
 
 if "is_mobile" not in st.session_state:
-    st.session_state.is_mobile = False
+    st.session_state.is_mobile = is_mobile
 
 # load env variables
 load_dotenv()
@@ -238,8 +238,17 @@ section[data-testid="stSidebar"][aria-expanded="false"] {
 
 
 # =========================
-# 📍 NAVIGATION (FIXED)
+# 📍 NAVIGATION
 # =========================
+
+pages = [
+    "🏠 Monthly Results",
+    "👤 Player Profile",
+    "🏆 Hall of Fame",
+    "📜 League History",
+    "🎁 Wrapped",
+    "ℹ️ Readme: Our Dashboard"
+]
 
 is_mobile_view = st.session_state.get("is_mobile", False)
 
