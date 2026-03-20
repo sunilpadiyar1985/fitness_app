@@ -18,9 +18,6 @@ if (width < 768) {
 </script>
 """, unsafe_allow_html=True)
 
-if "is_mobile" not in st.session_state:
-    st.session_state.is_mobile = is_mobile
-
 # load env variables
 load_dotenv()
 
