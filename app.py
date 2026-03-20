@@ -245,6 +245,10 @@ section[data-testid="stSidebar"][aria-expanded="false"] {
 # 📍 NAVIGATION (FINAL FIX)
 # =========================
 
+# =========================
+# 📍 NAVIGATION (FINAL STABLE)
+# =========================
+
 pages = [
     "🏠 Monthly Results",
     "👤 Player Profile",
@@ -254,36 +258,39 @@ pages = [
     "ℹ️ Readme: Our Dashboard"
 ]
 
-is_mobile_view = st.session_state.get("is_mobile", False)
-
-# ✅ keep selected page in session (prevents reset + sync issues)
+# ✅ Keep page state
 if "page" not in st.session_state:
     st.session_state.page = pages[0]
 
-if is_mobile_view:
-    st.markdown('<div class="hero">', unsafe_allow_html=True)
+# ✅ MOBILE NAV (always rendered, CSS will hide on desktop)
+st.markdown('<div class="hero">', unsafe_allow_html=True)
 
-    selected = st.selectbox(
-        "",
-        pages,
-        index=pages.index(st.session_state.page),
-        key="mobile_nav_select"   # 🔑 IMPORTANT
-    )
+mobile_selected = st.selectbox(
+    "",
+    pages,
+    index=pages.index(st.session_state.page),
+    key="mobile_nav_select"
+)
 
-    st.markdown('</div>', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
-else:
-    selected = st.sidebar.radio(
-        "Navigate",
-        pages,
-        index=pages.index(st.session_state.page),
-        key="desktop_sidebar_nav"   # 🔑 IMPORTANT
-    )
+# ✅ DESKTOP NAV (always rendered, CSS will hide on mobile)
+desktop_selected = st.sidebar.radio(
+    "Navigate",
+    pages,
+    index=pages.index(st.session_state.page),
+    key="desktop_sidebar_nav"
+)
 
-# ✅ final page value
-st.session_state.page = selected
-page = selected
+# ✅ Decide active page
+# (whichever changed last)
+if mobile_selected != st.session_state.page:
+    st.session_state.page = mobile_selected
 
+elif desktop_selected != st.session_state.page:
+    st.session_state.page = desktop_selected
+
+page = st.session_state.page
 # =========================
 # 🧰 USER TOOLS (Sidebar)
 # =========================
