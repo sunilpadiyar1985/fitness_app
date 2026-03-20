@@ -8,8 +8,12 @@ import numpy as np
 import requests
 import streamlit as st
 
-query_params = st.query_params
-is_mobile = query_params.get("mobile", "false") == "true"
+# Detect screen width using query param fallback
+is_mobile = st.query_params.get("mobile", "false") == "true"
+
+# fallback heuristic
+if "is_mobile" not in st.session_state:
+    st.session_state.is_mobile = is_mobile
 
 st.markdown("""
 <script>
@@ -32,7 +36,7 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 # connect
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-st.set_page_config(page_title="Steps League – Monthly Results", page_icon="🏃", layout="centered", )
+st.set_page_config(page_title="Steps League – Monthly Results", page_icon="🏃", layout="wide", )
 if not st.session_state.get("is_admin", False):
     st.markdown("""
     <style>
@@ -49,7 +53,7 @@ if not st.session_state.get("is_admin", False):
 MAINTENANCE_MODE = False   # ← switch ON / OFF
 
 def maintenance_gate():
-    st.set_page_config(page_title="Steps League – Maintenance", page_icon="🚧", layout="centered")
+    st.set_page_config(page_title="Steps League – Maintenance", page_icon="🚧", layout="wide")
 
     st.markdown("""
     <div style="text-align:center; padding:40px;">
@@ -117,38 +121,68 @@ st.markdown("""
 
 html, body, [class*="css"] {
     font-family: 'Poppins', sans-serif;
-}
-
-html, body {
     background-color: #f9fafb;
 }
 
-/* Typography */
-h1 { font-size: 2.2rem; font-weight: 700; }
-h2 { font-size: 1.7rem; font-weight: 600; }
-h3 { font-size: 1.35rem; font-weight: 600; }
+/* -------------------------
+   Layout Fix (REMOVE GAP)
+------------------------- */
+.block-container {
+    padding-top: 0.8rem !important;
+}
 
-/* Sidebar */
+/* Remove ghost spacing */
+div[data-testid="stVerticalBlock"] > div:first-child {
+    margin-top: 0 !important;
+}
+
+/* -------------------------
+   Sidebar
+------------------------- */
 section[data-testid="stSidebar"] {
     background-color: #fafafa;
 }
 
-/* Metrics */
+/* Hide collapse button */
+button[kind="header"] {
+    display: none !important;
+}
+
+/* -------------------------
+   Cards
+------------------------- */
+.card {
+    background: white;
+    border-radius: 16px;
+    padding: 14px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.05);
+}
+
+/* -------------------------
+   Metrics
+------------------------- */
 div[data-testid="metric-container"] {
     border-radius: 14px;
     padding: 12px;
     background-color: #f7f8fa;
 }
 
-/* Layout spacing */
-.block-container {
-    padding-top: 1rem !important;
-}
-
-/* =========================
-   📱 MOBILE
-========================= */
+/* -------------------------
+   Mobile
+------------------------- */
 @media (max-width: 768px) {
+
+    section[data-testid="stSidebar"] {
+        display: none;
+    }
+
+    .hero {
+        position: sticky;
+        top: 0;
+        z-index: 999;
+        background: #f9fafb;
+        padding: 8px 0;
+    }
 
     .block-container {
         padding-top: 0.5rem !important;
@@ -157,53 +191,20 @@ div[data-testid="metric-container"] {
     h1 { font-size: 1.6rem; }
     h2 { font-size: 1.3rem; }
     h3 { font-size: 1.1rem; }
-
-    .card {
-        padding: 10px;
-        border-radius: 12px;
-    }
-
-    div[data-testid="metric-container"] {
-        padding: 8px;
-    }
-
-    /* Hide sidebar on mobile */
-    section[data-testid="stSidebar"] {
-        display: none;
-    }
 }
 
-/* =========================
-   🧱 CARD
-========================= */
-.card {
-    background: white;
-    border-radius: 16px;
-    padding: 14px;
-    box-shadow: 0 6px 16px rgba(0,0,0,0.05);
-}
-
-/* =========================
-   📌 STICKY TOP NAV
-========================= */
-.hero {
-    position: sticky;
-    top: 0;
-    z-index: 999;
-    background: inherit;
-    padding: 10px 0;
-}
-
-/* Hide top nav on desktop */
+/* -------------------------
+   Desktop → HIDE TOP NAV
+------------------------- */
 @media (min-width: 769px) {
     .hero {
-        display: none;
+        display: none !important;
     }
 }
 
-/* =========================
-   🌙 DARK MODE
-========================= */
+/* -------------------------
+   Dark mode
+------------------------- */
 @media (prefers-color-scheme: dark) {
 
     html, body {
@@ -211,44 +212,43 @@ div[data-testid="metric-container"] {
         color: #e6e6e6 !important;
     }
 
-    p, span, div, label {
-        color: #e6e6e6 !important;
-    }
-
     .card {
         background: #1c1f26 !important;
-        color: #e6e6e6 !important;
     }
 
     div[data-testid="metric-container"] {
         background-color: #1c1f26 !important;
-        color: #ffffff !important;
     }
 
     section[data-testid="stSidebar"] {
         background-color: #161a22 !important;
     }
-
-    h1, h2, h3 {
-        color: #ffffff !important;
-    }
 }
+</style>
+""", unsafe_allow_html=True)
 
+st.markdown("""
+<style>
+/* Force sidebar always visible */
+section[data-testid="stSidebar"][aria-expanded="false"] {
+    display: block !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
 
 # =========================
-# 📍 NAVIGATION
+# 📍 NAVIGATION (FIXED)
 # =========================
-pages = [
-    "🏠 Monthly Results",
-    "👤 Player Profile",
-    "🏆 Hall of Fame",
-    "📜 League History",
-    "🎁 Wrapped",
-    "ℹ️ Readme: Our Dashboard"
-]
+
+is_mobile_view = st.session_state.get("is_mobile", False)
+
+if is_mobile_view:
+    st.markdown('<div class="hero">', unsafe_allow_html=True)
+    page = st.selectbox("", pages, key="mobile_nav")
+    st.markdown('</div>', unsafe_allow_html=True)
+else:
+    page = st.sidebar.radio("Navigate", pages)
 
 # 🔥 Mobile Top Navigation
 st.markdown('<div class="hero">', unsafe_allow_html=True)
