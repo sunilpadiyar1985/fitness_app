@@ -8,6 +8,20 @@ import numpy as np
 import requests
 import streamlit as st
 
+st.markdown("""
+<script>
+const width = window.innerWidth;
+const isMobile = width < 768;
+
+if (isMobile && !window.location.search.includes("mobile=true")) {
+    const url = new URL(window.location.href);
+    url.searchParams.set("mobile", "true");
+    window.location.href = url.toString();
+}
+</script>
+""", unsafe_allow_html=True)
+
+is_mobile = st.query_params.get("mobile", "false") == "true"
 
 st.markdown("""
 <script>
@@ -106,12 +120,15 @@ top_improved   = pd.Series(dtype=float)
 # =========================
 # 🎨 CSS
 # =========================
+# =========================
+# 🎨 CSS (CLEAN & STABLE)
+# =========================
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
 /* -------------------------
-   Global
+   GLOBAL
 ------------------------- */
 html, body, [class*="css"] {
     font-family: 'Poppins', sans-serif;
@@ -119,7 +136,7 @@ html, body, [class*="css"] {
 }
 
 /* -------------------------
-   Layout Fix
+   LAYOUT (REMOVE TOP GAP)
 ------------------------- */
 .block-container {
     padding-top: 0.8rem !important;
@@ -130,19 +147,19 @@ div[data-testid="stVerticalBlock"] > div:first-child {
 }
 
 /* -------------------------
-   Sidebar
+   SIDEBAR
 ------------------------- */
 section[data-testid="stSidebar"] {
     background-color: #fafafa;
 }
 
-/* ❗ Remove collapse button */
+/* Hide Streamlit collapse button (prevents broken UX) */
 button[kind="header"] {
     display: none !important;
 }
 
 /* -------------------------
-   Cards
+   CARDS
 ------------------------- */
 .card {
     background: white;
@@ -152,7 +169,7 @@ button[kind="header"] {
 }
 
 /* -------------------------
-   Metrics
+   METRICS
 ------------------------- */
 div[data-testid="metric-container"] {
     border-radius: 14px;
@@ -161,58 +178,29 @@ div[data-testid="metric-container"] {
 }
 
 /* =========================
-   MOBILE
+   MOBILE OPTIMIZATION
 ========================= */
 @media (max-width: 768px) {
 
-    /* Hide sidebar */
+    /* Hide sidebar on mobile */
     section[data-testid="stSidebar"] {
         display: none !important;
     }
 
-    /* Top nav visible */
-    .hero {
-        position: sticky;
-        top: 0;
-        z-index: 999;
-        background: #f9fafb;
-        padding: 8px 0;
-    }
-
+    /* Tighten layout */
     .block-container {
         padding-top: 0.5rem !important;
     }
 
+    /* Typography scaling */
     h1 { font-size: 1.6rem; }
     h2 { font-size: 1.3rem; }
     h3 { font-size: 1.1rem; }
 }
 
 /* =========================
-   DESKTOP
+   DARK MODE
 ========================= */
-@media (min-width: 769px) {
-
-    /* ❗ FORCE HIDE TOP NAV */
-    .hero {
-        display: none !important;
-    }
-
-    /* Ensure sidebar always visible */
-    section[data-testid="stSidebar"] {
-        display: block !important;
-    }
-}
-
-/* Remove hero spacing always */
-.hero {
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-/* -------------------------
-   Dark Mode
-------------------------- */
 @media (prefers-color-scheme: dark) {
 
     html, body {
@@ -239,7 +227,6 @@ div[data-testid="metric-container"] {
 # =========================
 # 📍 NAVIGATION
 # =========================
-
 pages = [
     "🏠 Monthly Results",
     "👤 Player Profile",
@@ -252,33 +239,34 @@ pages = [
 if "page" not in st.session_state:
     st.session_state.page = pages[0]
 
-# Top nav
-st.markdown('<div class="hero">', unsafe_allow_html=True)
+# 👇 OPTIONAL: Manual override toggle (your ask)
+with st.sidebar:
+    st.markdown("### ⚙️ View Mode")
+    force_mobile = st.checkbox("Force Mobile View")
 
-mobile_selected = st.selectbox(
-    "",
-    pages,
-    index=pages.index(st.session_state.page),
-    key="mobile_nav_select"
-)
+if force_mobile:
+    is_mobile = True
 
-st.markdown('</div>', unsafe_allow_html=True)
+# -------------------------
+# NAV RENDER
+# -------------------------
+if is_mobile:
+    selected = st.selectbox(
+        "",
+        pages,
+        index=pages.index(st.session_state.page),
+        key="mobile_nav"
+    )
+else:
+    selected = st.sidebar.radio(
+        "Navigate",
+        pages,
+        index=pages.index(st.session_state.page),
+        key="desktop_nav"
+    )
 
-# Sidebar nav
-desktop_selected = st.sidebar.radio(
-    "Navigate",
-    pages,
-    index=pages.index(st.session_state.page),
-    key="desktop_sidebar_nav"
-)
-
-# Sync
-if mobile_selected != st.session_state.page:
-    st.session_state.page = mobile_selected
-elif desktop_selected != st.session_state.page:
-    st.session_state.page = desktop_selected
-
-page = st.session_state.page
+st.session_state.page = selected
+page = selected
 
 # =========================
 # 🧰 USER TOOLS (Sidebar)
@@ -2104,10 +2092,6 @@ show_global_league_moments(league_events)
 # Data Load Finishes...
 # Helper function completed...
 # Engines have been build and ready to roar...
-
-st.markdown("""
-<div class="hero">
-""", unsafe_allow_html=True)
 
 st.markdown("""
 <div style="
