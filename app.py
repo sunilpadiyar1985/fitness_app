@@ -241,6 +241,10 @@ section[data-testid="stSidebar"][aria-expanded="false"] {
 # 📍 NAVIGATION
 # =========================
 
+# =========================
+# 📍 NAVIGATION (FINAL FIX)
+# =========================
+
 pages = [
     "🏠 Monthly Results",
     "👤 Player Profile",
@@ -252,28 +256,33 @@ pages = [
 
 is_mobile_view = st.session_state.get("is_mobile", False)
 
+# ✅ keep selected page in session (prevents reset + sync issues)
+if "page" not in st.session_state:
+    st.session_state.page = pages[0]
+
 if is_mobile_view:
     st.markdown('<div class="hero">', unsafe_allow_html=True)
-    page = st.selectbox("", pages, key="mobile_nav")
+
+    selected = st.selectbox(
+        "",
+        pages,
+        index=pages.index(st.session_state.page),
+        key="mobile_nav_select"   # 🔑 IMPORTANT
+    )
+
     st.markdown('</div>', unsafe_allow_html=True)
+
 else:
-    page = st.sidebar.radio("Navigate", pages)
+    selected = st.sidebar.radio(
+        "Navigate",
+        pages,
+        index=pages.index(st.session_state.page),
+        key="desktop_sidebar_nav"   # 🔑 IMPORTANT
+    )
 
-# 🔥 Mobile Top Navigation
-st.markdown('<div class="hero">', unsafe_allow_html=True)
-
-mobile_page = st.selectbox("", pages, key="mobile_nav")
-
-st.markdown('</div>', unsafe_allow_html=True)
-
-
-# 🖥️ Desktop Sidebar Navigation
-page = st.sidebar.radio("Navigate", pages)
-
-
-# 🎯 FINAL PAGE SELECTION (CRITICAL LINE)
-page = mobile_page or page
-
+# ✅ final page value
+st.session_state.page = selected
+page = selected
 
 # =========================
 # 🧰 USER TOOLS (Sidebar)
