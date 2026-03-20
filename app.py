@@ -8,12 +8,6 @@ import numpy as np
 import requests
 import streamlit as st
 
-# crude but effective
-is_mobile = st.runtime.scriptrunner.script_run_context.get_script_run_ctx().query_string == "mobile=true"
-
-# fallback heuristic
-if "is_mobile" not in st.session_state:
-    st.session_state.is_mobile = is_mobile
 
 st.markdown("""
 <script>
@@ -119,19 +113,21 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
+/* -------------------------
+   Global
+------------------------- */
 html, body, [class*="css"] {
     font-family: 'Poppins', sans-serif;
     background-color: #f9fafb;
 }
 
 /* -------------------------
-   Layout Fix (REMOVE GAP)
+   Layout Fix
 ------------------------- */
 .block-container {
     padding-top: 0.8rem !important;
 }
 
-/* Remove ghost spacing */
 div[data-testid="stVerticalBlock"] > div:first-child {
     margin-top: 0 !important;
 }
@@ -143,7 +139,7 @@ section[data-testid="stSidebar"] {
     background-color: #fafafa;
 }
 
-/* Hide collapse button */
+/* ❗ Remove collapse button */
 button[kind="header"] {
     display: none !important;
 }
@@ -167,15 +163,17 @@ div[data-testid="metric-container"] {
     background-color: #f7f8fa;
 }
 
-/* -------------------------
-   Mobile
-------------------------- */
+/* =========================
+   MOBILE
+========================= */
 @media (max-width: 768px) {
 
+    /* Hide sidebar */
     section[data-testid="stSidebar"] {
-        display: none;
+        display: none !important;
     }
 
+    /* Top nav visible */
     .hero {
         position: sticky;
         top: 0;
@@ -193,24 +191,30 @@ div[data-testid="metric-container"] {
     h3 { font-size: 1.1rem; }
 }
 
-/* -------------------------
-   Desktop → HIDE TOP NAV
-------------------------- */
+/* =========================
+   DESKTOP
+========================= */
 @media (min-width: 769px) {
-    div[data-testid="stMarkdownContainer"] .hero {
+
+    /* ❗ FORCE HIDE TOP NAV */
+    .hero {
         display: none !important;
-        height: 0 !important;
-        overflow: hidden !important;
+    }
+
+    /* Ensure sidebar always visible */
+    section[data-testid="stSidebar"] {
+        display: block !important;
     }
 }
 
+/* Remove hero spacing always */
 .hero {
-    margin-bottom: 0 !important;
-    padding-bottom: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 /* -------------------------
-   Dark mode
+   Dark Mode
 ------------------------- */
 @media (prefers-color-scheme: dark) {
 
@@ -231,29 +235,12 @@ div[data-testid="metric-container"] {
         background-color: #161a22 !important;
     }
 }
+
 </style>
 """, unsafe_allow_html=True)
-
-st.markdown("""
-<style>
-/* Force sidebar always visible */
-section[data-testid="stSidebar"][aria-expanded="false"] {
-    display: block !important;
-}
-</style>
-""", unsafe_allow_html=True)
-
 
 # =========================
 # 📍 NAVIGATION
-# =========================
-
-# =========================
-# 📍 NAVIGATION (FINAL FIX)
-# =========================
-
-# =========================
-# 📍 NAVIGATION (FINAL STABLE)
 # =========================
 
 pages = [
@@ -265,11 +252,10 @@ pages = [
     "ℹ️ Readme: Our Dashboard"
 ]
 
-# ✅ Keep page state
 if "page" not in st.session_state:
     st.session_state.page = pages[0]
 
-# ✅ MOBILE NAV (always rendered, CSS will hide on desktop)
+# Top nav
 st.markdown('<div class="hero">', unsafe_allow_html=True)
 
 mobile_selected = st.selectbox(
@@ -281,7 +267,7 @@ mobile_selected = st.selectbox(
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-# ✅ DESKTOP NAV (always rendered, CSS will hide on mobile)
+# Sidebar nav
 desktop_selected = st.sidebar.radio(
     "Navigate",
     pages,
@@ -289,15 +275,14 @@ desktop_selected = st.sidebar.radio(
     key="desktop_sidebar_nav"
 )
 
-# ✅ Decide active page
-# (whichever changed last)
+# Sync
 if mobile_selected != st.session_state.page:
     st.session_state.page = mobile_selected
-
 elif desktop_selected != st.session_state.page:
     st.session_state.page = desktop_selected
 
 page = st.session_state.page
+
 # =========================
 # 🧰 USER TOOLS (Sidebar)
 # =========================
