@@ -8,29 +8,25 @@ import numpy as np
 import requests
 import streamlit as st
 
+# =========================
+# 📱 MOBILE DETECTION (STABLE)
+# =========================
 st.markdown("""
 <script>
-const width = window.innerWidth;
-const isMobile = width < 768;
+(function() {
+    const isMobile = window.innerWidth < 768;
+    const url = new URL(window.location);
 
-if (isMobile && !window.location.search.includes("mobile=true")) {
-    const url = new URL(window.location.href);
-    url.searchParams.set("mobile", "true");
-    window.location.href = url.toString();
-}
+    if (isMobile && url.searchParams.get("mobile") !== "true") {
+        url.searchParams.set("mobile", "true");
+        window.location.replace(url.toString());
+    }
+})();
 </script>
 """, unsafe_allow_html=True)
 
+# ✅ Read query param (single source of truth)
 is_mobile = st.query_params.get("mobile", "false") == "true"
-
-st.markdown("""
-<script>
-const width = window.innerWidth;
-if (width < 768) {
-    window.parent.postMessage({type: "SET_MOBILE"}, "*");
-}
-</script>
-""", unsafe_allow_html=True)
 
 # load env variables
 load_dotenv()
@@ -118,10 +114,7 @@ top_5k         = pd.Series(dtype=int)
 top_improved   = pd.Series(dtype=float)
 
 # =========================
-# 🎨 CSS
-# =========================
-# =========================
-# 🎨 CSS (CLEAN & STABLE)
+# 🎨 CSS (FINAL CLEAN)
 # =========================
 st.markdown("""
 <style>
@@ -136,10 +129,14 @@ html, body, [class*="css"] {
 }
 
 /* -------------------------
-   LAYOUT (REMOVE TOP GAP)
+   REMOVE TOP GAP (FIX #1)
 ------------------------- */
+header {
+    display: none !important;
+}
+
 .block-container {
-    padding-top: 0.8rem !important;
+    padding-top: 0.4rem !important;
 }
 
 div[data-testid="stVerticalBlock"] > div:first-child {
@@ -153,7 +150,7 @@ section[data-testid="stSidebar"] {
     background-color: #fafafa;
 }
 
-/* Hide Streamlit collapse button (prevents broken UX) */
+/* Hide Streamlit collapse button */
 button[kind="header"] {
     display: none !important;
 }
@@ -178,21 +175,18 @@ div[data-testid="metric-container"] {
 }
 
 /* =========================
-   MOBILE OPTIMIZATION
+   MOBILE
 ========================= */
 @media (max-width: 768px) {
 
-    /* Hide sidebar on mobile */
     section[data-testid="stSidebar"] {
         display: none !important;
     }
 
-    /* Tighten layout */
     .block-container {
-        padding-top: 0.5rem !important;
+        padding-top: 0.3rem !important;
     }
 
-    /* Typography scaling */
     h1 { font-size: 1.6rem; }
     h2 { font-size: 1.3rem; }
     h3 { font-size: 1.1rem; }
@@ -220,12 +214,12 @@ div[data-testid="metric-container"] {
         background-color: #161a22 !important;
     }
 }
-
 </style>
 """, unsafe_allow_html=True)
 
+
 # =========================
-# 📍 NAVIGATION
+# 📍 NAVIGATION (FINAL)
 # =========================
 pages = [
     "🏠 Monthly Results",
@@ -236,15 +230,24 @@ pages = [
     "ℹ️ Readme: Our Dashboard"
 ]
 
+# Persist selected page
 if "page" not in st.session_state:
     st.session_state.page = pages[0]
 
-# 👇 OPTIONAL: Manual override toggle (your ask)
+# Persist toggle
+if "force_mobile" not in st.session_state:
+    st.session_state.force_mobile = False
+
+# Sidebar controls
 with st.sidebar:
     st.markdown("### ⚙️ View Mode")
-    force_mobile = st.checkbox("Force Mobile View")
+    st.session_state.force_mobile = st.checkbox(
+        "Force Mobile View",
+        value=st.session_state.force_mobile
+    )
 
-if force_mobile:
+# Final mode decision
+if st.session_state.force_mobile:
     is_mobile = True
 
 # -------------------------
