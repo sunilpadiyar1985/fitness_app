@@ -8,8 +8,8 @@ import numpy as np
 import requests
 import streamlit as st
 
-# Detect screen width using query param fallback
-is_mobile = st.query_params.get("mobile", "false") == "true"
+# crude but effective
+is_mobile = st.runtime.scriptrunner.script_run_context.get_script_run_ctx().query_string == "mobile=true"
 
 # fallback heuristic
 if "is_mobile" not in st.session_state:
@@ -197,9 +197,16 @@ div[data-testid="metric-container"] {
    Desktop → HIDE TOP NAV
 ------------------------- */
 @media (min-width: 769px) {
-    .hero {
+    div[data-testid="stMarkdownContainer"] .hero {
         display: none !important;
+        height: 0 !important;
+        overflow: hidden !important;
     }
+}
+
+.hero {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
 }
 
 /* -------------------------
