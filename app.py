@@ -1534,10 +1534,10 @@ def show_global_league_moments(events_df):
         return
 
     ticker_text = "   |   ".join(messages[:6])  # cap length
-
-   st.markdown(f"""
-   <style>
-   .ticker-box {{
+    
+    st.markdown(f"""
+    <style>
+    .ticker-box {{
         background:#fff4f4;
         border-radius:14px;
         padding:10px 16px;
@@ -1548,39 +1548,40 @@ def show_global_league_moments(events_df):
         border:1px solid #ffd6d6;
         overflow: hidden;
         position: relative;
-   }}
+    }}
     
-   .ticker-content {{
-       display: inline-block;
-       white-space: nowrap;
-       padding-left: 100%;
-       animation: ticker-scroll 20s linear infinite;
-   }}
+    .ticker-content {{
+        display: inline-block;
+        white-space: nowrap;
+        padding-left: 100%;
+        animation: ticker-scroll 20s linear infinite;
+    }}
     
-   @keyframes ticker-scroll {{
-       0% {{
-           transform: translateX(0%);
-       }}
-       100% {{
-           transform: translateX(-100%);
-       }}
-   }}
+    @keyframes ticker-scroll {{
+        0% {{
+            transform: translateX(0%);
+        }}
+        100% {{
+            transform: translateX(-100%);
+        }}
+    }}
     
-   /* Mobile tweak */
-   @media (max-width: 768px) {{
-       .ticker-content {{
-           animation-duration: 25s;
-           font-size: 13px;
-       }}
-   }}
-   </style>
+    /* Mobile tweak */
+    @media (max-width: 768px) {{
+        .ticker-content {{
+            animation-duration: 25s;
+            font-size: 13px;
+        }}
+    }}
+    </style>
     
-   <div class="ticker-box">
-       <div class="ticker-content">
-           🚨 {ticker_text}
-       </div>
-   </div>
-   """, unsafe_allow_html=True)
+    <div class="ticker-box">
+        <div class="ticker-content">
+            🚨 {ticker_text}
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
 
 def team_month_stats(df, month, active_users):
     mdf = df[(df["MonthP"] == month) & (df["User"].isin(active_users))]
