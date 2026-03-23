@@ -209,19 +209,59 @@ div[data-testid="metric-container"] {
         background-color: #161a22 !important;
     }
 }
+
+/* Sidebar hidden by default (mobile-friendly) */
+section[data-testid="stSidebar"] {
+    transition: all 0.3s ease;
+}
+
+/* When hidden */
+.hide-sidebar section[data-testid="stSidebar"] {
+    display: none !important;
+}
+
+/* Menu button styling */
+.menu-btn {
+    font-size: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: #f0f2f6;
+    display: inline-block;
+    margin-bottom: 10px;
+}
+
+.menu-btn:hover {
+    background: #e0e3e8;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
 #css end
 
-
-
 # =========================
-# 📍 NAVIGATION (FINAL STABLE)
+# ☰ MENU TOGGLE
 # =========================
 
+if "show_sidebar" not in st.session_state:
+    st.session_state.show_sidebar = False
+
+col1, col2 = st.columns([1, 10])
+
+with col1:
+    if st.button("☰", key="menu_toggle"):
+        st.session_state.show_sidebar = not st.session_state.show_sidebar
+
+with col2:
+    st.markdown("### Fitness League Dashboard")
+
+if not st.session_state.show_sidebar:
+    st.markdown('<div class="hide-sidebar">', unsafe_allow_html=True)
+    
 # =========================
-# 📍 NAVIGATION (FINAL FIXED)
+# 📍 NAVIGATION
 # =========================
 
 pages = [
@@ -233,34 +273,16 @@ pages = [
     "ℹ️ Readme: Our Dashboard"
 ]
 
-# Persist selected page
 if "page" not in st.session_state:
     st.session_state.page = pages[0]
 
-# 📱 Detect mobile (from your existing query param logic)
-is_mobile = st.query_params.get("mobile", "false") == "true"
+selected = st.sidebar.radio(
+    "Navigate",
+    pages,
+    index=pages.index(st.session_state.page),
+    key="desktop_nav"
+)
 
-# -------------------------
-# RENDER ONLY ONE NAV
-# -------------------------
-if is_mobile:
-    # 📱 MOBILE NAV (top dropdown)
-    selected = st.selectbox(
-        "",
-        pages,
-        index=pages.index(st.session_state.page),
-        key="mobile_nav"
-    )
-else:
-    # 🖥️ DESKTOP NAV (sidebar)
-    selected = st.sidebar.radio(
-        "Navigate",
-        pages,
-        index=pages.index(st.session_state.page),
-        key="desktop_nav"
-    )
-
-# Sync page
 st.session_state.page = selected
 page = selected
 
