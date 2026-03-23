@@ -137,12 +137,14 @@ section[data-testid="stSidebar"] {
     }
 }
 
-/* Hide ONLY top nav on desktop */
+/* Hide top header ONLY on desktop */
 @media (min-width: 769px) {
-    .top-nav {
+    header[data-testid="stHeader"] {
         display: none !important;
     }
 }
+
+/* Ensure sidebar is always visible on desktop */
 @media (min-width: 769px) {
     section[data-testid="stSidebar"] {
         display: block !important;
