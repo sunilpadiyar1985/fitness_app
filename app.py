@@ -114,67 +114,132 @@ top_5k         = pd.Series(dtype=int)
 top_improved   = pd.Series(dtype=float)
 
 # =========================
-# 🎨 CSS (FINAL CLEAN)
+# 🎨 CSS (FINAL STABLE)
 # =========================
 st.markdown("""
 <style>
-
-/* REMOVE TOP GAP COMPLETELY */
-header {display:none !important;}
-.block-container {padding-top:0.3rem !important;}
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
 /* -------------------------
-   SIDEBAR
+   GLOBAL
+------------------------- */
+html, body, [class*="css"] {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f9fafb;
+}
+
+/* -------------------------
+   REMOVE TOP GAP
+------------------------- */
+header {
+    display: none !important;
+}
+
+.block-container {
+    padding-top: 0.4rem !important;
+}
+
+div[data-testid="stVerticalBlock"] > div:first-child {
+    margin-top: 0 !important;
+}
+
+/* -------------------------
+   SIDEBAR STYLE
 ------------------------- */
 section[data-testid="stSidebar"] {
     background-color: #fafafa;
 }
 
-/* HIDE SIDEBAR ON MOBILE */
+/* Hide Streamlit collapse button */
+button[kind="header"] {
+    display: none !important;
+}
+
+/* -------------------------
+   CARDS
+------------------------- */
+.card {
+    background: white;
+    border-radius: 16px;
+    padding: 14px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.05);
+}
+
+/* -------------------------
+   METRICS
+------------------------- */
+div[data-testid="metric-container"] {
+    border-radius: 14px;
+    padding: 12px;
+    background-color: #f7f8fa;
+}
+
+/* =========================
+   NAV VISIBILITY CONTROL
+========================= */
+
+/* MOBILE */
 @media (max-width: 768px) {
+
+    /* Show top nav */
+    .top-nav {
+        display: block !important;
+    }
+
+    /* Hide sidebar */
     section[data-testid="stSidebar"] {
         display: none !important;
     }
+
+    .block-container {
+        padding-top: 0.3rem !important;
+    }
+
+    h1 { font-size: 1.6rem; }
+    h2 { font-size: 1.3rem; }
+    h3 { font-size: 1.1rem; }
 }
 
-/* Hide top header ONLY on desktop */
+/* DESKTOP */
 @media (min-width: 769px) {
-    header[data-testid="stHeader"] {
+
+    /* Hide top nav */
+    .top-nav {
         display: none !important;
     }
-}
 
-/* Ensure sidebar is always visible on desktop */
-@media (min-width: 769px) {
+    /* Show sidebar */
     section[data-testid="stSidebar"] {
         display: block !important;
     }
 }
 
-/* FIX SELECTBOX WIDTH */
-div[data-baseweb="select"] {
-    margin-bottom: 0.5rem;
-}
+/* =========================
+   DARK MODE
+========================= */
+@media (prefers-color-scheme: dark) {
 
-/* -------------------------
-   TICKER FIX (IMPORTANT)
-------------------------- */
-.ticker-box marquee {
-    display: inline-block;
-    width: 100%;
-}
+    html, body {
+        background-color: #0e1117 !important;
+        color: #e6e6e6 !important;
+    }
 
-@media (max-width: 768px) {
-    .ticker-box marquee {
-        font-size: 13px;
+    .card {
+        background: #1c1f26 !important;
+    }
+
+    div[data-testid="metric-container"] {
+        background-color: #1c1f26 !important;
+    }
+
+    section[data-testid="stSidebar"] {
+        background-color: #161a22 !important;
     }
 }
-
 </style>
 """, unsafe_allow_html=True)
 
 #css end
-
 
 # =========================
 # 📍 NAVIGATION (FINAL STABLE)
@@ -189,25 +254,22 @@ pages = [
     "ℹ️ Readme: Our Dashboard"
 ]
 
+# Persist selected page
 if "page" not in st.session_state:
     st.session_state.page = pages[0]
 
-# BOTH NAVS RENDERED
+# 🔝 TOP NAV (mobile)
+st.markdown('<div class="top-nav">', unsafe_allow_html=True)
 
-# 🔝 TOP NAV (for mobile)
-top_nav_container = st.container()
-with top_nav_container:
-    st.markdown('<div class="top-nav">', unsafe_allow_html=True)
+mobile_selected = st.selectbox(
+    "",
+    pages,
+    index=pages.index(st.session_state.page),
+    key="mobile_nav"
+)
 
-    mobile_selected = st.selectbox(
-        "",
-        pages,
-        index=pages.index(st.session_state.page),
-        key="mobile_nav"
-    )
+st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown('</div>', unsafe_allow_html=True)
-    
 # 📚 SIDEBAR NAV (desktop)
 desktop_selected = st.sidebar.radio(
     "Navigate",
@@ -216,7 +278,7 @@ desktop_selected = st.sidebar.radio(
     key="desktop_nav"
 )
 
-# Sync
+# Sync selection
 if mobile_selected != st.session_state.page:
     st.session_state.page = mobile_selected
 elif desktop_selected != st.session_state.page:
