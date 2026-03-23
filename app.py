@@ -14,7 +14,7 @@ import streamlit as st
 st.markdown("""
 <script>
 (function() {
-    const isMobile = window.innerWidth < 768;
+    const isMobile = /Mobi|Android/i.test(navigator.userAgent);
     const url = new URL(window.location);
 
     if (isMobile && url.searchParams.get("mobile") !== "true") {
@@ -116,6 +116,9 @@ top_improved   = pd.Series(dtype=float)
 # =========================
 # 🎨 CSS (FINAL STABLE)
 # =========================
+# =========================
+# 🎨 CSS (FINAL CLEAN)
+# =========================
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -136,16 +139,11 @@ header {
 }
 
 .block-container {
-    padding-top: 0.4rem !important;
-}
-
-/* Fix top spacing safely */
-.block-container {
     padding-top: 0.3rem !important;
 }
 
 /* -------------------------
-   SIDEBAR STYLE
+   SIDEBAR
 ------------------------- */
 section[data-testid="stSidebar"] {
     background-color: #fafafa;
@@ -176,21 +174,9 @@ div[data-testid="metric-container"] {
 }
 
 /* =========================
-   NAV VISIBILITY CONTROL
+   MOBILE TWEAKS ONLY
 ========================= */
-
-/* MOBILE */
 @media (max-width: 768px) {
-
-    /* Show top nav */
-    .top-nav {
-        display: block !important;
-    }
-
-    /* Hide sidebar */
-    section[data-testid="stSidebar"] {
-        display: none !important;
-    }
 
     .block-container {
         padding-top: 0.3rem !important;
@@ -199,20 +185,6 @@ div[data-testid="metric-container"] {
     h1 { font-size: 1.6rem; }
     h2 { font-size: 1.3rem; }
     h3 { font-size: 1.1rem; }
-}
-
-/* DESKTOP */
-@media (min-width: 769px) {
-
-    /* Hide top nav */
-    .top-nav {
-        display: none !important;
-    }
-
-    /* Show sidebar */
-    section[data-testid="stSidebar"] {
-        display: block !important;
-    }
 }
 
 /* =========================
@@ -237,26 +209,6 @@ div[data-testid="metric-container"] {
         background-color: #161a22 !important;
     }
 }
-
-/* =========================
-   FINAL NAV CONTROL (WORKING)
-========================= */
-
-/* Hide top nav on desktop */
-@media (min-width: 769px) {
-    .top-nav {
-        display: none !important;
-        height: 0 !important;
-        overflow: hidden !important;
-    }
-}
-
-/* Hide sidebar on mobile */
-@media (max-width: 768px) {
-    section[data-testid="stSidebar"] {
-        display: none !important;
-    }
-}
 </style>
 """, unsafe_allow_html=True)
 
@@ -266,6 +218,10 @@ div[data-testid="metric-container"] {
 
 # =========================
 # 📍 NAVIGATION (FINAL STABLE)
+# =========================
+
+# =========================
+# 📍 NAVIGATION (FINAL FIXED)
 # =========================
 
 pages = [
@@ -281,33 +237,32 @@ pages = [
 if "page" not in st.session_state:
     st.session_state.page = pages[0]
 
-# 🔝 TOP NAV (mobile)
-st.markdown('<div class="top-nav">', unsafe_allow_html=True)
+# 📱 Detect mobile (from your existing query param logic)
+is_mobile = st.query_params.get("mobile", "false") == "true"
 
-mobile_selected = st.selectbox(
-    "",
-    pages,
-    index=pages.index(st.session_state.page),
-    key="mobile_nav"
-)
+# -------------------------
+# RENDER ONLY ONE NAV
+# -------------------------
+if is_mobile:
+    # 📱 MOBILE NAV (top dropdown)
+    selected = st.selectbox(
+        "",
+        pages,
+        index=pages.index(st.session_state.page),
+        key="mobile_nav"
+    )
+else:
+    # 🖥️ DESKTOP NAV (sidebar)
+    selected = st.sidebar.radio(
+        "Navigate",
+        pages,
+        index=pages.index(st.session_state.page),
+        key="desktop_nav"
+    )
 
-st.markdown('</div>', unsafe_allow_html=True)
-
-# 📚 SIDEBAR NAV (desktop)
-desktop_selected = st.sidebar.radio(
-    "Navigate",
-    pages,
-    index=pages.index(st.session_state.page),
-    key="desktop_nav"
-)
-
-# Sync selection
-if mobile_selected != st.session_state.page:
-    st.session_state.page = mobile_selected
-elif desktop_selected != st.session_state.page:
-    st.session_state.page = desktop_selected
-
-page = st.session_state.page
+# Sync page
+st.session_state.page = selected
+page = selected
 
 # =========================
 # 🧰 USER TOOLS (Sidebar)
