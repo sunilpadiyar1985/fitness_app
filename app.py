@@ -139,8 +139,9 @@ header {
     padding-top: 0.4rem !important;
 }
 
-div[data-testid="stVerticalBlock"] > div:first-child {
-    margin-top: 0 !important;
+/* Fix top spacing safely */
+.block-container {
+    padding-top: 0.3rem !important;
 }
 
 /* -------------------------
@@ -236,10 +237,32 @@ div[data-testid="metric-container"] {
         background-color: #161a22 !important;
     }
 }
+
+/* =========================
+   FINAL NAV CONTROL (WORKING)
+========================= */
+
+/* Hide top nav on desktop */
+@media (min-width: 769px) {
+    .top-nav {
+        display: none !important;
+        height: 0 !important;
+        overflow: hidden !important;
+    }
+}
+
+/* Hide sidebar on mobile */
+@media (max-width: 768px) {
+    section[data-testid="stSidebar"] {
+        display: none !important;
+    }
+}
 </style>
 """, unsafe_allow_html=True)
 
 #css end
+
+
 
 # =========================
 # 📍 NAVIGATION (FINAL STABLE)
