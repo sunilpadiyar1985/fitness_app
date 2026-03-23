@@ -118,30 +118,10 @@ top_improved   = pd.Series(dtype=float)
 # =========================
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
-/* -------------------------
-   GLOBAL
-------------------------- */
-html, body, [class*="css"] {
-    font-family: 'Poppins', sans-serif;
-    background-color: #f9fafb;
-}
-
-/* -------------------------
-   REMOVE TOP GAP (FIX #1)
-------------------------- */
-header {
-    display: none !important;
-}
-
-.block-container {
-    padding-top: 0.4rem !important;
-}
-
-div[data-testid="stVerticalBlock"] > div:first-child {
-    margin-top: 0 !important;
-}
+/* REMOVE TOP GAP COMPLETELY */
+header {display:none !important;}
+.block-container {padding-top:0.3rem !important;}
 
 /* -------------------------
    SIDEBAR
@@ -150,77 +130,49 @@ section[data-testid="stSidebar"] {
     background-color: #fafafa;
 }
 
-/* Hide Streamlit collapse button */
-button[kind="header"] {
-    display: none !important;
-}
-
-/* -------------------------
-   CARDS
-------------------------- */
-.card {
-    background: white;
-    border-radius: 16px;
-    padding: 14px;
-    box-shadow: 0 6px 16px rgba(0,0,0,0.05);
-}
-
-/* -------------------------
-   METRICS
-------------------------- */
-div[data-testid="metric-container"] {
-    border-radius: 14px;
-    padding: 12px;
-    background-color: #f7f8fa;
-}
-
-/* =========================
-   MOBILE
-========================= */
+/* HIDE SIDEBAR ON MOBILE */
 @media (max-width: 768px) {
-
     section[data-testid="stSidebar"] {
         display: none !important;
     }
-
-    .block-container {
-        padding-top: 0.3rem !important;
-    }
-
-    h1 { font-size: 1.6rem; }
-    h2 { font-size: 1.3rem; }
-    h3 { font-size: 1.1rem; }
 }
 
-/* =========================
-   DARK MODE
-========================= */
-@media (prefers-color-scheme: dark) {
-
-    html, body {
-        background-color: #0e1117 !important;
-        color: #e6e6e6 !important;
-    }
-
-    .card {
-        background: #1c1f26 !important;
-    }
-
-    div[data-testid="metric-container"] {
-        background-color: #1c1f26 !important;
-    }
-
-    section[data-testid="stSidebar"] {
-        background-color: #161a22 !important;
+/* HIDE TOP NAV ON DESKTOP */
+@media (min-width: 769px) {
+    div[data-testid="stVerticalBlock"] > div:first-child {
+        display: none !important;
     }
 }
+
+/* FIX SELECTBOX WIDTH */
+div[data-baseweb="select"] {
+    margin-bottom: 0.5rem;
+}
+
+/* -------------------------
+   TICKER FIX (IMPORTANT)
+------------------------- */
+.ticker-box marquee {
+    display: inline-block;
+    width: 100%;
+}
+
+@media (max-width: 768px) {
+    .ticker-box marquee {
+        font-size: 13px;
+    }
+}
+
 </style>
 """, unsafe_allow_html=True)
 
+#css end
+
 
 # =========================
-# 📍 NAVIGATION (FINAL)
+# 📍 NAVIGATION (FINAL STABLE)
 # =========================
+
 pages = [
     "🏠 Monthly Results",
     "👤 Player Profile",
@@ -230,46 +182,36 @@ pages = [
     "ℹ️ Readme: Our Dashboard"
 ]
 
-# Persist selected page
 if "page" not in st.session_state:
     st.session_state.page = pages[0]
 
-# Persist toggle
-if "force_mobile" not in st.session_state:
-    st.session_state.force_mobile = False
+# BOTH NAVS RENDERED
 
-# Sidebar controls
-with st.sidebar:
-    st.markdown("### ⚙️ View Mode")
-    st.session_state.force_mobile = st.checkbox(
-        "Force Mobile View",
-        value=st.session_state.force_mobile
-    )
-
-# Final mode decision
-if st.session_state.force_mobile:
-    is_mobile = True
-
-# -------------------------
-# NAV RENDER
-# -------------------------
-if is_mobile:
-    selected = st.selectbox(
+# 🔝 TOP NAV (for mobile)
+top_nav_container = st.container()
+with top_nav_container:
+    mobile_selected = st.selectbox(
         "",
         pages,
         index=pages.index(st.session_state.page),
         key="mobile_nav"
     )
-else:
-    selected = st.sidebar.radio(
-        "Navigate",
-        pages,
-        index=pages.index(st.session_state.page),
-        key="desktop_nav"
-    )
 
-st.session_state.page = selected
-page = selected
+# 📚 SIDEBAR NAV (desktop)
+desktop_selected = st.sidebar.radio(
+    "Navigate",
+    pages,
+    index=pages.index(st.session_state.page),
+    key="desktop_nav"
+)
+
+# Sync
+if mobile_selected != st.session_state.page:
+    st.session_state.page = mobile_selected
+elif desktop_selected != st.session_state.page:
+    st.session_state.page = desktop_selected
+
+page = st.session_state.page
 
 # =========================
 # 🧰 USER TOOLS (Sidebar)
@@ -1593,7 +1535,7 @@ def show_global_league_moments(events_df):
 
     ticker_text = "   |   ".join(messages[:6])  # cap length
 
-    st.markdown(f"""
+   st.markdown(f"""
     <style>
     .ticker-box {{
         background:#fff4f4;
@@ -1604,21 +1546,39 @@ def show_global_league_moments(events_df):
         font-size:14px;
         font-weight:500;
         border:1px solid #ffd6d6;
-    
-        overflow: hidden;   /* IMPORTANT */
-        display: block;     /* FIX */
+        overflow: hidden;
+        position: relative;
     }}
     
-    .ticker-box marquee {{
+    .ticker-content {{
+        display: inline-block;
         white-space: nowrap;
-        line-height: 1.4;
+        padding-left: 100%;
+        animation: ticker-scroll 20s linear infinite;
+    }}
+    
+    @keyframes ticker-scroll {{
+        0% {{
+            transform: translateX(0%);
+        }}
+        100% {{
+            transform: translateX(-100%);
+        }}
+    }}
+    
+    /* Mobile tweak */
+    @media (max-width: 768px) {{
+        .ticker-content {{
+            animation-duration: 25s;
+            font-size: 13px;
+        }}
     }}
     </style>
     
     <div class="ticker-box">
-        <marquee behavior="scroll" direction="left" scrollamount="5">
+        <div class="ticker-content">
             🚨 {ticker_text}
-        </marquee>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
