@@ -8,26 +8,6 @@ import numpy as np
 import requests
 import streamlit as st
 
-# =========================
-# 📱 MOBILE DETECTION (STABLE)
-# =========================
-st.markdown("""
-<script>
-(function() {
-    const isMobile = /Mobi|Android/i.test(navigator.userAgent);
-    const url = new URL(window.location);
-
-    if (isMobile && url.searchParams.get("mobile") !== "true") {
-        url.searchParams.set("mobile", "true");
-        window.location.replace(url.toString());
-    }
-})();
-</script>
-""", unsafe_allow_html=True)
-
-# ✅ Read query param (single source of truth)
-is_mobile = st.query_params.get("mobile", "false") == "true"
-
 # load env variables
 load_dotenv()
 
@@ -113,9 +93,6 @@ top_10k        = pd.Series(dtype=int)
 top_5k         = pd.Series(dtype=int)
 top_improved   = pd.Series(dtype=float)
 
-# =========================
-# 🎨 CSS (FINAL STABLE)
-# =========================
 # =========================
 # 🎨 CSS (FINAL CLEAN)
 # =========================
@@ -215,23 +192,6 @@ section[data-testid="stSidebar"] {
     transition: all 0.3s ease;
 }
 
-/* When hidden */
-.hide-sidebar section[data-testid="stSidebar"] {
-    display: none !important;
-}
-
-/* Menu button styling */
-.menu-btn {
-    font-size: 20px;
-    font-weight: 600;
-    cursor: pointer;
-    padding: 6px 12px;
-    border-radius: 8px;
-    background: #f0f2f6;
-    display: inline-block;
-    margin-bottom: 10px;
-}
-
 .menu-btn:hover {
     background: #e0e3e8;
 }
@@ -242,26 +202,7 @@ section[data-testid="stSidebar"] {
 #css end
 
 # =========================
-# ☰ MENU TOGGLE
-# =========================
-
-if "show_sidebar" not in st.session_state:
-    st.session_state.show_sidebar = False
-
-col1, col2 = st.columns([1, 10])
-
-with col1:
-    if st.button("☰", key="menu_toggle"):
-        st.session_state.show_sidebar = not st.session_state.show_sidebar
-
-with col2:
-    st.markdown("### Fitness League Dashboard")
-
-if not st.session_state.show_sidebar:
-    st.markdown('<div class="hide-sidebar">', unsafe_allow_html=True)
-    
-# =========================
-# 📍 NAVIGATION
+# 📍 NAVIGATION (CLEAN & WORKING)
 # =========================
 
 pages = [
@@ -273,18 +214,42 @@ pages = [
     "ℹ️ Readme: Our Dashboard"
 ]
 
+# Persist page
 if "page" not in st.session_state:
     st.session_state.page = pages[0]
 
-selected = st.sidebar.radio(
-    "Navigate",
-    pages,
-    index=pages.index(st.session_state.page),
-    key="desktop_nav"
-)
+# Menu state
+if "menu_open" not in st.session_state:
+    st.session_state.menu_open = False
 
-st.session_state.page = selected
-page = selected
+# 🔘 Header row
+col1, col2 = st.columns([1, 10])
+
+with col1:
+    if st.button("☰", key="menu_btn"):
+        st.session_state.menu_open = not st.session_state.menu_open
+
+with col2:
+    st.markdown("### Fitness League Dashboard")
+
+# 📱 Inline navigation menu (works on mobile + desktop)
+if st.session_state.menu_open:
+
+    st.markdown("#### Navigate")
+
+    selected = st.radio(
+        "",
+        pages,
+        index=pages.index(st.session_state.page),
+        key="inline_nav"
+    )
+
+    st.session_state.page = selected
+    st.session_state.menu_open = False
+    
+
+# Final page
+page = st.session_state.page
 
 # =========================
 # 🧰 USER TOOLS (Sidebar)
