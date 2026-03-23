@@ -137,10 +137,15 @@ section[data-testid="stSidebar"] {
     }
 }
 
-/* HIDE TOP NAV ON DESKTOP */
+/* Hide ONLY top nav on desktop */
 @media (min-width: 769px) {
-    div[data-testid="stVerticalBlock"] > div:first-child {
+    .top-nav {
         display: none !important;
+    }
+}
+@media (min-width: 769px) {
+    section[data-testid="stSidebar"] {
+        display: block !important;
     }
 }
 
@@ -190,6 +195,8 @@ if "page" not in st.session_state:
 # 🔝 TOP NAV (for mobile)
 top_nav_container = st.container()
 with top_nav_container:
+    st.markdown('<div class="top-nav">', unsafe_allow_html=True)
+
     mobile_selected = st.selectbox(
         "",
         pages,
@@ -197,6 +204,8 @@ with top_nav_container:
         key="mobile_nav"
     )
 
+    st.markdown('</div>', unsafe_allow_html=True)
+    
 # 📚 SIDEBAR NAV (desktop)
 desktop_selected = st.sidebar.radio(
     "Navigate",
