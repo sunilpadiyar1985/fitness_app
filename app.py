@@ -230,8 +230,22 @@ with col1:
         st.session_state.menu_open = not st.session_state.menu_open
 
 with col2:
-    st.markdown("### Fitness League Dashboard")
-
+    st.markdown("""
+    <div style="
+        background: linear-gradient(135deg, #f8fafc, #eef2ff);
+        padding: 18px 22px;
+        border-radius: 18px;
+        margin-bottom: 6px;
+    ">
+        <div style="font-size:26px; font-weight:700;">
+            🏃 Steps League
+        </div>
+        <div style="color:#555; font-size:14px;">
+            Consistency • Competition • Community
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
 # 📱 Inline navigation menu (works on mobile + desktop)
 if st.session_state.menu_open:
 
@@ -2095,21 +2109,7 @@ show_global_league_moments(league_events)
 # Helper function completed...
 # Engines have been build and ready to roar...
 
-st.markdown("""
-<div style="
-    background: linear-gradient(135deg, #f8fafc, #eef2ff);
-    padding: 18px 22px;
-    border-radius: 18px;
-    margin-bottom: 6px;
-">
-    <div style="font-size:26px; font-weight:700;">
-        🏃 Steps League
-    </div>
-    <div style="color:#555; font-size:14px;">
-        Consistency • Competition • Community
-    </div>
-</div>
-""", unsafe_allow_html=True)
+
 
 st.markdown("""
 </div>
