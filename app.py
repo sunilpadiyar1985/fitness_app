@@ -1586,6 +1586,7 @@ def show_global_league_moments(events_df):
         return
 
     ticker_text = "   |   ".join(messages[:6])  # cap length
+    speed = max(40, len(ticker_text) // 5)
     
     st.markdown(f"""
     <style>
@@ -1606,7 +1607,8 @@ def show_global_league_moments(events_df):
         display: inline-block;
         white-space: nowrap;
         padding-left: 100%;
-        animation: ticker-scroll 50s ease-in-out infinite;
+        
+        animation: ticker-scroll {speed}s ease-in-out infinite;
     }}
     
     @keyframes ticker-scroll {{
