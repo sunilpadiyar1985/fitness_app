@@ -34,7 +34,7 @@ if not st.session_state.get("is_admin", False):
 MAINTENANCE_MODE = False   # ← switch ON / OFF
 
 def maintenance_gate():
-    st.set_page_config(page_title="Steps League – Maintenance", page_icon="🚧", layout="wide")
+    st.set_page_config(page_title="Steps League – Maintenance", page_icon="🚧", layout="centered")
 
     st.markdown("""
     <div style="text-align:center; padding:40px;">
