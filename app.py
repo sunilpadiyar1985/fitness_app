@@ -348,6 +348,10 @@ with col1:
     if st.button("☰", key="menu_btn"):
         st.session_state.menu_open = not st.session_state.menu_open
 
+    if st.button("🔄", help="Refresh data"):
+        st.cache_data.clear()
+        st.rerun()
+
 with col2:
     st.markdown("""
     <div class="main-header" style="
