@@ -6,7 +6,6 @@ from dotenv import load_dotenv
 import plotly.express as px
 import numpy as np
 import requests
-import streamlit as st
 
 # load env variables
 load_dotenv()
@@ -50,20 +49,6 @@ def maintenance_gate():
     """, unsafe_allow_html=True)
 
     st.markdown("#### 🔐 Admin access")
-
-    pwd = st.text_input("Enter admin password", type="password")
-
-    if pwd != st.secrets.get("LEAGUE_ADMIN_PASSWORD", ""):
-        st.info("Maintenance mode is active.")
-        st.stop()
-
-    if "is_admin" not in st.session_state:
-        st.session_state.is_admin = False
-
-    if st.session_state.get("is_admin"):
-        st.markdown(
-            "[🔎 Full backend health](https://stepsync-backend-727314171136.us-central1.run.app/health)"
-        )
     
     pwd = st.text_input("Enter admin password", type="password")
     
@@ -100,40 +85,43 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
-/* -------------------------
+/* =========================
    GLOBAL
-------------------------- */
+========================= */
 html, body, [class*="css"] {
     font-family: 'Poppins', sans-serif;
     background-color: #f9fafb;
 }
 
-/* -------------------------
-   REMOVE TOP GAP
-------------------------- */
-header {
-    display: none !important;
-}
+/* Remove top gap */
+header { display: none !important; }
 
 .block-container {
     padding-top: 0.3rem !important;
 }
 
-/* -------------------------
+/* =========================
    SIDEBAR
-------------------------- */
+========================= */
 section[data-testid="stSidebar"] {
     background-color: #fafafa;
 }
 
-/* Hide Streamlit collapse button */
 button[kind="header"] {
     display: none !important;
 }
 
-/* -------------------------
+/* =========================
+   HEADER
+========================= */
+.main-header {
+    background: linear-gradient(135deg, #f8fafc, #eef2ff);
+    color: #111;
+}
+
+/* =========================
    CARDS
-------------------------- */
+========================= */
 .card {
     background: white;
     border-radius: 16px;
@@ -141,9 +129,48 @@ button[kind="header"] {
     box-shadow: 0 6px 16px rgba(0,0,0,0.05);
 }
 
-/* -------------------------
+/* 🥇 Winner Glow */
+.card-winner {
+    border: 1px solid rgba(255, 215, 0, 0.4);
+    box-shadow:
+        0 0 12px rgba(255, 215, 0, 0.35),
+        0 0 24px rgba(255, 215, 0, 0.25),
+        0 8px 20px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+    animation: winner-glow 2.5s infinite;
+}
+
+.card-winner:hover {
+    transform: translateY(-4px) scale(1.02);
+}
+
+@keyframes winner-glow {
+    0% { box-shadow: 0 0 10px rgba(255,215,0,0.3); }
+    50% { box-shadow: 0 0 20px rgba(255,215,0,0.6); }
+    100% { box-shadow: 0 0 10px rgba(255,215,0,0.3); }
+}
+
+/* =========================
+   PODIUM COLORS
+========================= */
+.card-gold {
+    background:#e8d9a8;
+    color:#222;
+}
+
+.card-silver {
+    background:#e5e5e5;
+    color:#222;
+}
+
+.card-bronze {
+    background:#e0d0c0;
+    color:#222;
+}
+
+/* =========================
    METRICS
-------------------------- */
+========================= */
 div[data-testid="metric-container"] {
     border-radius: 14px;
     padding: 12px;
@@ -151,10 +178,43 @@ div[data-testid="metric-container"] {
 }
 
 /* =========================
-   MOBILE TWEAKS ONLY
+   HALL CARDS
+========================= */
+.hall-card {
+    background:#f7f9fc;
+    padding:14px;
+    border-radius:14px;
+    text-align:center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.hall-title {
+    font-size:14px;
+    font-weight:500;
+    color:#666;
+}
+
+.hall-name {
+    font-size:20px;
+    font-weight:600;
+    margin-top:6px;
+}
+
+.hall-badge {
+    display:inline-block;
+    margin-top:8px;
+    padding:4px 10px;
+    background:#e8f7ee;
+    color:#1b7f4b;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:500;
+}
+
+/* =========================
+   MOBILE
 ========================= */
 @media (max-width: 768px) {
-
     .block-container {
         padding-top: 0.3rem !important;
     }
@@ -165,71 +225,66 @@ div[data-testid="metric-container"] {
 }
 
 /* =========================
-   DARK MODE
+   DARK MODE (SINGLE CLEAN BLOCK)
 ========================= */
 @media (prefers-color-scheme: dark) {
 
     html, body {
         background-color: #0e1117 !important;
-        color: #e6e6e6 !important;
     }
 
-    .card {
-        background: #1c1f26 !important;
+    h1, h2, h3, h4 {
+        color: #ffffff !important;
     }
 
-    div[data-testid="metric-container"] {
-        background-color: #1c1f26 !important;
+    p, span, label {
+        color: #d0d0d0 !important;
     }
 
     section[data-testid="stSidebar"] {
         background-color: #161a22 !important;
     }
-}
 
-/* Sidebar hidden by default (mobile-friendly) */
-section[data-testid="stSidebar"] {
-    transition: all 0.3s ease;
-}
-
-.menu-btn:hover {
-    background: #e0e3e8;
-}
-
-/* =========================
-   DARK MODE TEXT FIX (IMPORTANT)
-========================= */
-@media (prefers-color-scheme: dark) {
-
-    /* Global text */
-    html, body, p, span, div {
-        color: #e6e6e6 !important;
-    }
-
-    /* Headings */
-    h1, h2, h3, h4, h5 {
-        color: #ffffff !important;
-    }
-
-    /* Secondary text */
-    small, label {
-        color: #b0b0b0 !important;
-    }
-
-    /* Cards (your podium cards etc.) */
     .card {
         background: #1c1f26 !important;
         color: #ffffff !important;
     }
 
-    /* Winner / highlight cards (important) */
-    div[style*="background"] {
+    div[data-testid="metric-container"] {
+        background-color: #1c1f26 !important;
         color: #ffffff !important;
     }
 
-    /* Selectbox / dropdown */
-    div[data-baseweb="select"] {
+    /* Header */
+    .main-header {
+        background: linear-gradient(135deg, #1c1f26, #2a2f3a) !important;
         color: #ffffff !important;
+    }
+
+    .main-header div {
+        color: #ffffff !important;
+    }
+
+    /* Podium stays dark text */
+    .card-gold,
+    .card-silver,
+    .card-bronze {
+        color:#222 !important;
+    }
+
+    /* Hall cards */
+    .hall-card {
+        background:#1c1f26 !important;
+        color:#ffffff !important;
+    }
+
+    .hall-title {
+        color:#bbbbbb !important;
+    }
+
+    .hall-badge {
+        background:#1f3d2b !important;
+        color:#4ade80 !important;
     }
 
     /* Ticker */
@@ -239,11 +294,15 @@ section[data-testid="stSidebar"] {
         border: 1px solid #663333 !important;
     }
 
-    /* Info / highlight boxes */
-    .stAlert {
+    /* Select */
+    div[data-baseweb="select"] {
         color: #ffffff !important;
     }
 
+    /* Alerts */
+    .stAlert {
+        color: #ffffff !important;
+    }
 }
 
 </style>
@@ -281,8 +340,7 @@ with col1:
 
 with col2:
     st.markdown("""
-    <div style="
-        background: linear-gradient(135deg, #f8fafc, #eef2ff);
+    <div class="main-header" style="
         padding: 18px 22px;
         border-radius: 18px;
         margin-bottom: 6px;
@@ -290,7 +348,7 @@ with col2:
         <div style="font-size:26px; font-weight:700;">
             🏃 Steps League
         </div>
-        <div style="color:#555; font-size:14px;">
+        <div style="font-size:14px;">
             Consistency • Competition • Community
         </div>
     </div>
@@ -373,31 +431,13 @@ with st.sidebar.expander("🧰 User tools", expanded=False):
 
 def hall_card(title, name, sub):
     st.markdown(f"""
-    <div style="
-        background:#f7f9fc;
-        padding:14px;
-        border-radius:14px;
-        text-align:center;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-    ">
-        <div style="font-size:14px; font-weight:500; color:#666;">{title}</div>
-        <div style="font-size:20px; font-weight:600; margin-top:6px; white-space:normal;">
-            {name}
-        </div>
-        <div style="
-            display:inline-block;
-            margin-top:8px;
-            padding:4px 10px;
-            background:#e8f7ee;
-            color:#1b7f4b;
-            border-radius:999px;
-            font-size:12px;
-            font-weight:500;
-        ">
-            {sub}
-        </div>
+    <div class="hall-card">
+        <div class="hall-title">{title}</div>
+        <div class="hall-name">{name}</div>
+        <div class="hall-badge">{sub}</div>
     </div>
     """, unsafe_allow_html=True)
+
 
 # ----------------------------
 # LOAD DATA (MULTI YEAR, SAFE)
