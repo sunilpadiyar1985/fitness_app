@@ -361,9 +361,9 @@ with top_container:
         ticker_text = "   |   ".join(messages[:6])  # cap length
         speed = max(40, len(ticker_text) // 5)
         
-        st.markdown(f"""
+        st.markdown("""
         <style>
-        .ticker-box {{
+        .ticker-box {
             background:#fff4f4;
             border-radius:14px;
             padding:10px 16px;
@@ -374,12 +374,11 @@ with top_container:
             border:1px solid #ffd6d6;
             overflow: hidden;
             position: relative;
-        }}
+        }
         
         .ticker-content {
             display: inline-block;
             white-space: nowrap;
-        
             animation: ticker-scroll linear infinite;
         }
         
@@ -393,14 +392,16 @@ with top_container:
         }
         
         /* Mobile tweak */
-        @media (max-width: 768px) {{
-            .ticker-content {{
+        @media (max-width: 768px) {
+            .ticker-content {
                 animation-duration: 25s;
                 font-size: 13px;
-            }}
-        }}
+            }
+        }
         </style>
+        """, unsafe_allow_html=True)
         
+        st.markdown(f"""
         <div class="ticker-box">
             <div class="ticker-content">
                 🚨 {ticker_text}
