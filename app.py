@@ -320,83 +320,6 @@ div[data-testid="metric-container"] {
 
 #css end
 
-# =========================
-# 📍 NAVIGATION (STABLE FIX)
-# =========================
-
-pages = [
-    "🏠 Monthly Results",
-    "👤 Player Profile",
-    "🏆 Hall of Fame",
-    "📜 League History",
-    "🎁 Wrapped",
-    "ℹ️ Readme: Our Dashboard"
-]
-
-# -------------------------
-# STATE INIT
-# -------------------------
-if "page" not in st.session_state:
-    st.session_state.page = pages[0]
-
-if "menu_open" not in st.session_state:
-    st.session_state.menu_open = False
-
-
-# -------------------------
-# HEADER
-# -------------------------
-col1, col2, col3 = st.columns([1, 6, 1])
-
-with col1:
-    if st.button("☰", key="menu_btn"):
-        st.session_state.menu_open = not st.session_state.menu_open
-
-with col2:
-    st.markdown("""
-    <div class="main-header" style="
-        padding: 18px 22px;
-        border-radius: 18px;
-        margin-bottom: 6px;
-    ">
-        <div style="font-size:26px; font-weight:700;">
-            🏃 Steps League
-        </div>
-        <div style="font-size:14px;">
-            Consistency • Competition • Community
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-with col3:
-    if st.button("🔄", key="refresh_btn"):
-        st.cache_data.clear()
-        st.rerun()
-
-
-# -------------------------
-# MENU (IMPORTANT FIX)
-# -------------------------
-if st.session_state.menu_open:
-
-    selected = st.radio(
-        "Navigate",
-        pages,
-        index=pages.index(st.session_state.page),
-        key="nav_radio"
-    )
-
-    # ✅ Only update page when it actually changes
-    if selected != st.session_state.page:
-        st.session_state.page = selected
-        st.session_state.menu_open = False
-        st.rerun()   # 🔥 force clean navigation
-
-# -------------------------
-# FINAL PAGE
-# -------------------------
-page = st.session_state.page
-
 def show_global_league_moments(events_df):
 
     if events_df is None or events_df.empty:
@@ -484,6 +407,82 @@ def show_global_league_moments(events_df):
     </div>
     """, unsafe_allow_html=True)
 
+# =========================
+# 📍 NAVIGATION (STABLE FIX)
+# =========================
+
+pages = [
+    "🏠 Monthly Results",
+    "👤 Player Profile",
+    "🏆 Hall of Fame",
+    "📜 League History",
+    "🎁 Wrapped",
+    "ℹ️ Readme: Our Dashboard"
+]
+
+# -------------------------
+# STATE INIT
+# -------------------------
+if "page" not in st.session_state:
+    st.session_state.page = pages[0]
+
+if "menu_open" not in st.session_state:
+    st.session_state.menu_open = False
+
+
+# -------------------------
+# HEADER
+# -------------------------
+col1, col2, col3 = st.columns([1, 6, 1])
+
+with col1:
+    if st.button("☰", key="menu_btn"):
+        st.session_state.menu_open = not st.session_state.menu_open
+
+with col2:
+    st.markdown("""
+    <div class="main-header" style="
+        padding: 18px 22px;
+        border-radius: 18px;
+        margin-bottom: 6px;
+    ">
+        <div style="font-size:26px; font-weight:700;">
+            🏃 Steps League
+        </div>
+        <div style="font-size:14px;">
+            Consistency • Competition • Community
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col3:
+    if st.button("🔄", key="refresh_btn"):
+        st.cache_data.clear()
+        st.rerun()
+
+
+# -------------------------
+# MENU (IMPORTANT FIX)
+# -------------------------
+if st.session_state.menu_open:
+
+    selected = st.radio(
+        "Navigate",
+        pages,
+        index=pages.index(st.session_state.page),
+        key="nav_radio"
+    )
+
+    # ✅ Only update page when it actually changes
+    if selected != st.session_state.page:
+        st.session_state.page = selected
+        st.session_state.menu_open = False
+        st.rerun()   # 🔥 force clean navigation
+
+# -------------------------
+# FINAL PAGE
+# -------------------------
+page = st.session_state.page
 
 # =========================
 # 🧰 USER TOOLS (Sidebar)
