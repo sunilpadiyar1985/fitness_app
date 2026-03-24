@@ -196,6 +196,56 @@ section[data-testid="stSidebar"] {
     background: #e0e3e8;
 }
 
+/* =========================
+   DARK MODE TEXT FIX (IMPORTANT)
+========================= */
+@media (prefers-color-scheme: dark) {
+
+    /* Global text */
+    html, body, p, span, div {
+        color: #e6e6e6 !important;
+    }
+
+    /* Headings */
+    h1, h2, h3, h4, h5 {
+        color: #ffffff !important;
+    }
+
+    /* Secondary text */
+    small, label {
+        color: #b0b0b0 !important;
+    }
+
+    /* Cards (your podium cards etc.) */
+    .card {
+        background: #1c1f26 !important;
+        color: #ffffff !important;
+    }
+
+    /* Winner / highlight cards (important) */
+    div[style*="background"] {
+        color: #ffffff !important;
+    }
+
+    /* Selectbox / dropdown */
+    div[data-baseweb="select"] {
+        color: #ffffff !important;
+    }
+
+    /* Ticker */
+    .ticker-box {
+        background: #2a1a1a !important;
+        color: #ffcccc !important;
+        border: 1px solid #663333 !important;
+    }
+
+    /* Info / highlight boxes */
+    .stAlert {
+        color: #ffffff !important;
+    }
+
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -223,7 +273,7 @@ if "menu_open" not in st.session_state:
     st.session_state.menu_open = False
 
 # 🔘 Header row
-col1, col2 = st.columns([1, 10])
+col1, col2, col3 = st.columns([1, 8, 1])
 
 with col1:
     if st.button("☰", key="menu_btn"):
@@ -245,6 +295,11 @@ with col2:
         </div>
     </div>
     """, unsafe_allow_html=True)
+
+with col3:
+    if st.button("🔄", help="Refresh data"):
+        st.cache_data.clear()
+        st.rerun()
     
 # 📱 Inline navigation menu (works on mobile + desktop)
 if st.session_state.menu_open:
