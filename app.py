@@ -396,25 +396,6 @@ if st.session_state.menu_open:
 # FINAL PAGE
 # -------------------------
 page = st.session_state.page
-    
-# 📱 Inline navigation menu (works on mobile + desktop)
-if st.session_state.menu_open:
-
-    st.markdown("#### Navigate")
-
-    selected = st.radio(
-        "",
-        pages,
-        index=pages.index(st.session_state.page),
-        key="inline_nav"
-    )
-
-    st.session_state.page = selected
-    st.session_state.menu_open = False
-    
-
-# Final page
-page = st.session_state.page
 
 # =========================
 # 🧰 USER TOOLS (Sidebar)
