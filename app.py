@@ -2089,8 +2089,6 @@ def render_wrapped(df, year):
             st.info("Badges are warming up for next year 😄")
 
 league_events = build_league_events(base_df, league_history)
-show_global_league_moments(league_events)
-
 # Data Load Finishes...
 # Helper function completed...
 # Engines have been build and ready to roar...
@@ -2099,8 +2097,6 @@ show_global_league_moments(league_events)
 top_container = st.container()
 with top_container:
         show_global_league_moments (league_events)
-    
-
 # =========================
 # 📍 NAVIGATION (STABLE FIX)
 # =========================
