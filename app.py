@@ -319,93 +319,94 @@ div[data-testid="metric-container"] {
 """, unsafe_allow_html=True)
 
 #css end
+top_container = st.container()
 
-def show_global_league_moments(events_df):
-
-    if events_df is None or events_df.empty:
-        return
-
-    league_current_month = league_now(df).to_period("M")
-
-    # -------------------------
-    # 🧱 RECORD EVENTS (HISTORY)
-    # -------------------------
-    breaking = (
-        events_df[events_df["MonthP"] == league_current_month]
-        .sort_values("date", ascending=False)
-        .drop_duplicates(subset=["type"], keep="first")
-        .head(5)
-    )
-
-    record_messages = []
-    for _, r in breaking.iterrows():
-        record_messages.append(
-            f"🏆 {r['title']} — {name_with_status(r['User'])} ({r['value']:,})"
+with top_container:
+    def show_global_league_moments(events_df):
+    
+        if events_df is None or events_df.empty:
+            return
+    
+        league_current_month = league_now(df).to_period("M")
+    
+        # -------------------------
+        # 🧱 RECORD EVENTS (HISTORY)
+        # -------------------------
+        breaking = (
+            events_df[events_df["MonthP"] == league_current_month]
+            .sort_values("date", ascending=False)
+            .drop_duplicates(subset=["type"], keep="first")
+            .head(5)
         )
-
-    # -------------------------
-    # 🔥 LIVE STATE (STREAKS)
-    # -------------------------
-    live_messages = build_active_streak_messages(df)
-
-    # -------------------------
-    # 🎯 COMBINE (LIVE FIRST)
-    # -------------------------
-    messages = live_messages + record_messages
-
-    if not messages:
-        return
-
-    ticker_text = "   |   ".join(messages[:6])  # cap length
-    speed = max(40, len(ticker_text) // 5)
     
-    st.markdown(f"""
-    <style>
-    .ticker-box {{
-        background:#fff4f4;
-        border-radius:14px;
-        padding:10px 16px;
-        margin-top:8px;
-        margin-bottom:12px;
-        font-size:14px;
-        font-weight:500;
-        border:1px solid #ffd6d6;
-        overflow: hidden;
-        position: relative;
-    }}
+        record_messages = []
+        for _, r in breaking.iterrows():
+            record_messages.append(
+                f"🏆 {r['title']} — {name_with_status(r['User'])} ({r['value']:,})"
+            )
     
-    .ticker-content {{
-        display: inline-block;
-        white-space: nowrap;
-        padding-left: 100%;
+        # -------------------------
+        # 🔥 LIVE STATE (STREAKS)
+        # -------------------------
+        live_messages = build_active_streak_messages(df)
+    
+        # -------------------------
+        # 🎯 COMBINE (LIVE FIRST)
+        # -------------------------
+        messages = live_messages + record_messages
+    
+        if not messages:
+            return
+    
+        ticker_text = "   |   ".join(messages[:6])  # cap length
+        speed = max(40, len(ticker_text) // 5)
         
-        animation: ticker-scroll {speed}s ease-in-out infinite;
-    }}
-    
-    @keyframes ticker-scroll {{
-        0% {{
-            transform: translateX(0%);
+        st.markdown(f"""
+        <style>
+        .ticker-box {{
+            background:#fff4f4;
+            border-radius:14px;
+            padding:10px 16px;
+            margin-top:8px;
+            margin-bottom:12px;
+            font-size:14px;
+            font-weight:500;
+            border:1px solid #ffd6d6;
+            overflow: hidden;
+            position: relative;
         }}
-        100% {{
-            transform: translateX(-100%);
+        
+        .ticker-content {
+            display: inline-block;
+            white-space: nowrap;
+        
+            animation: ticker-scroll linear infinite;
+        }
+        
+        @keyframes ticker-scroll {
+            from {
+                transform: translateX(100%);
+            }
+            to {
+                transform: translateX(-100%);
+            }
+        }
+        
+        /* Mobile tweak */
+        @media (max-width: 768px) {{
+            .ticker-content {{
+                animation-duration: 25s;
+                font-size: 13px;
+            }}
         }}
-    }}
-    
-    /* Mobile tweak */
-    @media (max-width: 768px) {{
-        .ticker-content {{
-            animation-duration: 25s;
-            font-size: 13px;
-        }}
-    }}
-    </style>
-    
-    <div class="ticker-box">
-        <div class="ticker-content">
-            🚨 {ticker_text}
+        </style>
+        
+        <div class="ticker-box">
+            <div class="ticker-content">
+                🚨 {ticker_text}
+            </div>
         </div>
-    </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
 
 # =========================
 # 📍 NAVIGATION (STABLE FIX)
