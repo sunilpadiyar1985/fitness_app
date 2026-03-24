@@ -321,7 +321,7 @@ div[data-testid="metric-container"] {
 #css end
 
 # =========================
-# 📍 NAVIGATION (CLEAN & WORKING)
+# 📍 NAVIGATION (STABLE FIX)
 # =========================
 
 pages = [
@@ -333,24 +333,24 @@ pages = [
     "ℹ️ Readme: Our Dashboard"
 ]
 
-# Persist page
+# -------------------------
+# STATE INIT
+# -------------------------
 if "page" not in st.session_state:
     st.session_state.page = pages[0]
 
-# Menu state
 if "menu_open" not in st.session_state:
     st.session_state.menu_open = False
 
-# 🔘 Header row
-col1, col2 = st.columns([1, 8])
+
+# -------------------------
+# HEADER
+# -------------------------
+col1, col2, col3 = st.columns([1, 6, 1])
 
 with col1:
     if st.button("☰", key="menu_btn"):
         st.session_state.menu_open = not st.session_state.menu_open
-
-    if st.button("🔄", help="Refresh data"):
-        st.cache_data.clear()
-        st.rerun()
 
 with col2:
     st.markdown("""
@@ -367,6 +367,35 @@ with col2:
         </div>
     </div>
     """, unsafe_allow_html=True)
+
+with col3:
+    if st.button("🔄", key="refresh_btn"):
+        st.cache_data.clear()
+        st.rerun()
+
+
+# -------------------------
+# MENU (IMPORTANT FIX)
+# -------------------------
+if st.session_state.menu_open:
+
+    selected = st.radio(
+        "Navigate",
+        pages,
+        index=pages.index(st.session_state.page),
+        key="nav_radio"
+    )
+
+    # ✅ Only update page when it actually changes
+    if selected != st.session_state.page:
+        st.session_state.page = selected
+        st.session_state.menu_open = False
+        st.rerun()   # 🔥 force clean navigation
+
+# -------------------------
+# FINAL PAGE
+# -------------------------
+page = st.session_state.page
     
 # 📱 Inline navigation menu (works on mobile + desktop)
 if st.session_state.menu_open:
