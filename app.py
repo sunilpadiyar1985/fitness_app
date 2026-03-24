@@ -122,22 +122,32 @@ button[kind="header"] {
 /* =========================
    CARDS
 ========================= */
-.card {
-    background: white;
-    border-radius: 16px;
-    padding: 14px;
-    box-shadow: 0 6px 16px rgba(0,0,0,0.05);
+.card-winner {
+    border: 1px solid rgba(255, 215, 0, 0.5);
+
+    animation: winner-glow 2.5s ease-in-out infinite;
+
+    box-shadow:
+        0 0 10px rgba(255,215,0,0.3),
+        0 0 20px rgba(255,215,0,0.2);
 }
 
-/* 🥇 Winner Glow */
-.card-winner {
-    border: 1px solid rgba(255, 215, 0, 0.4);
-    box-shadow:
-        0 0 12px rgba(255, 215, 0, 0.35),
-        0 0 24px rgba(255, 215, 0, 0.25),
-        0 8px 20px rgba(0,0,0,0.08);
-    transition: all 0.3s ease;
-    animation: winner-glow 2.5s infinite;
+@keyframes winner-glow {
+    0% {
+        box-shadow:
+            0 0 10px rgba(255,215,0,0.2),
+            0 0 20px rgba(255,215,0,0.1);
+    }
+    50% {
+        box-shadow:
+            0 0 22px rgba(255,215,0,0.6),
+            0 0 40px rgba(255,215,0,0.4);
+    }
+    100% {
+        box-shadow:
+            0 0 10px rgba(255,215,0,0.2),
+            0 0 20px rgba(255,215,0,0.1);
+    }
 }
 
 .card-winner:hover {
@@ -332,7 +342,7 @@ if "menu_open" not in st.session_state:
     st.session_state.menu_open = False
 
 # 🔘 Header row
-col1, col2, col3 = st.columns([1, 8, 1])
+col1, col2, col3 = st.columns([1, 6, 2])
 
 with col1:
     if st.button("☰", key="menu_btn"):
