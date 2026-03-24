@@ -342,7 +342,7 @@ if "menu_open" not in st.session_state:
     st.session_state.menu_open = False
 
 # 🔘 Header row
-col1, col2, col3 = st.columns([1, 6, 2])
+col1, col2 = st.columns([1, 8])
 
 with col1:
     if st.button("☰", key="menu_btn"):
@@ -367,11 +367,6 @@ with col2:
         </div>
     </div>
     """, unsafe_allow_html=True)
-
-with col3:
-    if st.button("🔄", help="Refresh data"):
-        st.cache_data.clear()
-        st.rerun()
     
 # 📱 Inline navigation menu (works on mobile + desktop)
 if st.session_state.menu_open:
