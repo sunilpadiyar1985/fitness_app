@@ -319,10 +319,9 @@ div[data-testid="metric-container"] {
 """, unsafe_allow_html=True)
 
 #css end
-top_container = st.container()
 
-with top_container:
-    def show_global_league_moments(events_df):
+
+def show_global_league_moments(events_df):
     
         if events_df is None or events_df.empty:
             return
@@ -361,9 +360,9 @@ with top_container:
         ticker_text = "   |   ".join(messages[:6])  # cap length
         speed = max(40, len(ticker_text) // 5)
         
-        st.markdown("""
+        st.markdown(f"""
         <style>
-        .ticker-box {
+        .ticker-box {{
             background:#fff4f4;
             border-radius:14px;
             padding:10px 16px;
@@ -374,40 +373,43 @@ with top_container:
             border:1px solid #ffd6d6;
             overflow: hidden;
             position: relative;
-        }
+        }}
         
-        .ticker-content {
+        .ticker-content {{
             display: inline-block;
             white-space: nowrap;
-            animation: ticker-scroll linear infinite;
-        }
+            animation: ticker-scroll {speed}s linear infinite;
+        }}
         
-        @keyframes ticker-scroll {
-            from {
+        @keyframes ticker-scroll {{
+            from {{
                 transform: translateX(100%);
-            }
-            to {
+            }}
+            to {{
                 transform: translateX(-100%);
-            }
-        }
+            }}
+        }}
         
-        /* Mobile tweak */
-        @media (max-width: 768px) {
-            .ticker-content {
-                animation-duration: 25s;
+        @media (max-width: 768px) {{
+            .ticker-content {{
+                animation-duration: {int(speed * 0.7)}s;
                 font-size: 13px;
-            }
-        }
+            }}
+        }}
         </style>
-        """, unsafe_allow_html=True)
         
-        st.markdown(f"""
         <div class="ticker-box">
             <div class="ticker-content">
                 🚨 {ticker_text}
             </div>
         </div>
         """, unsafe_allow_html=True)
+    
+top_container = st.container()
+
+with top_container:
+        show_global_league_moments (league_events)
+    
 
 # =========================
 # 📍 NAVIGATION (STABLE FIX)
