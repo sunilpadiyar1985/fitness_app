@@ -397,6 +397,94 @@ if st.session_state.menu_open:
 # -------------------------
 page = st.session_state.page
 
+def show_global_league_moments(events_df):
+
+    if events_df is None or events_df.empty:
+        return
+
+    league_current_month = league_now(df).to_period("M")
+
+    # -------------------------
+    # 🧱 RECORD EVENTS (HISTORY)
+    # -------------------------
+    breaking = (
+        events_df[events_df["MonthP"] == league_current_month]
+        .sort_values("date", ascending=False)
+        .drop_duplicates(subset=["type"], keep="first")
+        .head(5)
+    )
+
+    record_messages = []
+    for _, r in breaking.iterrows():
+        record_messages.append(
+            f"🏆 {r['title']} — {name_with_status(r['User'])} ({r['value']:,})"
+        )
+
+    # -------------------------
+    # 🔥 LIVE STATE (STREAKS)
+    # -------------------------
+    live_messages = build_active_streak_messages(df)
+
+    # -------------------------
+    # 🎯 COMBINE (LIVE FIRST)
+    # -------------------------
+    messages = live_messages + record_messages
+
+    if not messages:
+        return
+
+    ticker_text = "   |   ".join(messages[:6])  # cap length
+    speed = max(40, len(ticker_text) // 5)
+    
+    st.markdown(f"""
+    <style>
+    .ticker-box {{
+        background:#fff4f4;
+        border-radius:14px;
+        padding:10px 16px;
+        margin-top:8px;
+        margin-bottom:12px;
+        font-size:14px;
+        font-weight:500;
+        border:1px solid #ffd6d6;
+        overflow: hidden;
+        position: relative;
+    }}
+    
+    .ticker-content {{
+        display: inline-block;
+        white-space: nowrap;
+        padding-left: 100%;
+        
+        animation: ticker-scroll {speed}s ease-in-out infinite;
+    }}
+    
+    @keyframes ticker-scroll {{
+        0% {{
+            transform: translateX(0%);
+        }}
+        100% {{
+            transform: translateX(-100%);
+        }}
+    }}
+    
+    /* Mobile tweak */
+    @media (max-width: 768px) {{
+        .ticker-content {{
+            animation-duration: 25s;
+            font-size: 13px;
+        }}
+    }}
+    </style>
+    
+    <div class="ticker-box">
+        <div class="ticker-content">
+            🚨 {ticker_text}
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
 # =========================
 # 🧰 USER TOOLS (Sidebar)
 # =========================
@@ -1662,94 +1750,6 @@ def build_active_streak_messages(df):
             )
 
     return messages[:6]
-    
-def show_global_league_moments(events_df):
-
-    if events_df is None or events_df.empty:
-        return
-
-    league_current_month = league_now(df).to_period("M")
-
-    # -------------------------
-    # 🧱 RECORD EVENTS (HISTORY)
-    # -------------------------
-    breaking = (
-        events_df[events_df["MonthP"] == league_current_month]
-        .sort_values("date", ascending=False)
-        .drop_duplicates(subset=["type"], keep="first")
-        .head(5)
-    )
-
-    record_messages = []
-    for _, r in breaking.iterrows():
-        record_messages.append(
-            f"🏆 {r['title']} — {name_with_status(r['User'])} ({r['value']:,})"
-        )
-
-    # -------------------------
-    # 🔥 LIVE STATE (STREAKS)
-    # -------------------------
-    live_messages = build_active_streak_messages(df)
-
-    # -------------------------
-    # 🎯 COMBINE (LIVE FIRST)
-    # -------------------------
-    messages = live_messages + record_messages
-
-    if not messages:
-        return
-
-    ticker_text = "   |   ".join(messages[:6])  # cap length
-    speed = max(40, len(ticker_text) // 5)
-    
-    st.markdown(f"""
-    <style>
-    .ticker-box {{
-        background:#fff4f4;
-        border-radius:14px;
-        padding:10px 16px;
-        margin-top:8px;
-        margin-bottom:12px;
-        font-size:14px;
-        font-weight:500;
-        border:1px solid #ffd6d6;
-        overflow: hidden;
-        position: relative;
-    }}
-    
-    .ticker-content {{
-        display: inline-block;
-        white-space: nowrap;
-        padding-left: 100%;
-        
-        animation: ticker-scroll {speed}s ease-in-out infinite;
-    }}
-    
-    @keyframes ticker-scroll {{
-        0% {{
-            transform: translateX(0%);
-        }}
-        100% {{
-            transform: translateX(-100%);
-        }}
-    }}
-    
-    /* Mobile tweak */
-    @media (max-width: 768px) {{
-        .ticker-content {{
-            animation-duration: 25s;
-            font-size: 13px;
-        }}
-    }}
-    </style>
-    
-    <div class="ticker-box">
-        <div class="ticker-content">
-            🚨 {ticker_text}
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
 
 def team_month_stats(df, month, active_users):
     mdf = df[(df["MonthP"] == month) & (df["User"].isin(active_users))]
