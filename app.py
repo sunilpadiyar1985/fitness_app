@@ -869,7 +869,7 @@ def build_league_history(monthly_df, roster_df, raw_df, PREMIER_SIZE=10, MOVE_N=
     months = sorted(df["MonthP"].dropna().unique())
 
     history = []
-    prev_table = None   # 👈 full previous month table
+    prev_table = None
 
     for i, month in enumerate(months):
 
@@ -904,70 +904,65 @@ def build_league_history(monthly_df, roster_df, raw_df, PREMIER_SIZE=10, MOVE_N=
         )
 
         # -----------------------------
-        # FIRST MONTH (INITIAL SPLIT)
+        # FIRST MONTH
         # -----------------------------
         if i == 0:
 
-            m = m.sort_values("points", ascending=False)
+            m = m.sort_values("points", ascending=False).reset_index(drop=True)
 
             m["League"] = "Championship"
-            m.loc[m.head(PREMIER_SIZE).index, "League"] = "Premier"
-
-            m["Promoted"] = False
-            m["Relegated"] = False
+            m.loc[:PREMIER_SIZE-1, "League"] = "Premier"
 
         else:
 
-            # -----------------------------
-            # START WITH PREVIOUS LEAGUE
-            # -----------------------------
-            m["League"] = m["User"].map(
-                prev_table.set_index("User")["League"]
-            )
-
-            # new users → Championship
-            m["League"] = m["League"].fillna("Championship")
-
-            m["Promoted"] = False
-            m["Relegated"] = False
-
-            # -----------------------------
-            # 🔥 CRITICAL FIX
-            # Use PREVIOUS MONTH standings
-            # -----------------------------
             prev = prev_table.copy()
 
-            prev_prem = prev[prev["League"] == "Premier"] \
-                .sort_values("Rank")
+            # 🔥 Step 1: start from previous league
+            m["League"] = m["User"].map(prev.set_index("User")["League"])
+            m["League"] = m["League"].fillna("Championship")
 
-            prev_champ = prev[prev["League"] == "Championship"] \
-                .sort_values("Rank")
+            # 🔥 Step 2: get movement from PREVIOUS month
+            prev_prem = prev[prev["League"] == "Premier"].sort_values("Rank")
+            prev_champ = prev[prev["League"] == "Championship"].sort_values("Rank")
 
-            relegated = prev_prem.tail(MOVE_N)["User"]
-            promoted = prev_champ.head(MOVE_N)["User"]
+            relegated = prev_prem.tail(MOVE_N)["User"].tolist()
+            promoted = prev_champ.head(MOVE_N)["User"].tolist()
 
-            # Apply movement
+            # 🔥 Step 3: apply movement
             m.loc[m["User"].isin(relegated), "League"] = "Championship"
             m.loc[m["User"].isin(promoted), "League"] = "Premier"
 
-            m.loc[m["User"].isin(relegated), "Relegated"] = True
-            m.loc[m["User"].isin(promoted), "Promoted"] = True
+            # -----------------------------
+            # 🔥 Step 4: FORCE EXACT SIZE (CRITICAL FIX)
+            # -----------------------------
+            prem = m[m["League"] == "Premier"]
+
+            if len(prem) != PREMIER_SIZE:
+
+                # Rebuild Premier STRICTLY from previous logic
+                base_prem = prev_prem.head(PREMIER_SIZE - MOVE_N)["User"].tolist()
+
+                final_prem = list(set(base_prem + promoted))
+
+                m["League"] = "Championship"
+                m.loc[m["User"].isin(final_prem), "League"] = "Premier"
 
         # -----------------------------
-        # RANK WITHIN LEAGUE (CURRENT MONTH PERFORMANCE)
+        # RANKING (CURRENT MONTH ONLY)
         # -----------------------------
         m["Rank"] = (
             m.groupby("League")["points"]
             .rank(method="first", ascending=False)
         )
 
+        m["Promoted"] = m["User"].isin(promoted) if i > 0 else False
+        m["Relegated"] = m["User"].isin(relegated) if i > 0 else False
         m["Champion"] = m["Rank"] == 1
+
         m["MonthP"] = month
         m["Month"] = month.to_timestamp("M")
 
         history.append(m)
-
-        # 👇 store FULL table for next iteration
         prev_table = m.copy()
 
     return pd.concat(history, ignore_index=True)
