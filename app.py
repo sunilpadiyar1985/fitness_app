@@ -869,7 +869,7 @@ def build_league_history(monthly_df, roster_df, raw_df, PREMIER_SIZE=10, MOVE_N=
     months = sorted(df["MonthP"].dropna().unique())
 
     history = []
-    prev_leagues = {}
+    prev_table = None   # 👈 full previous month table
 
     for i, month in enumerate(months):
 
@@ -877,7 +877,7 @@ def build_league_history(monthly_df, roster_df, raw_df, PREMIER_SIZE=10, MOVE_N=
         month_end = month.end_time
 
         # -----------------------------
-        # ACTIVE USERS THIS MONTH
+        # ACTIVE USERS
         # -----------------------------
         active_users = roster_df[
             (roster_df["Active from"] <= month_end) &
@@ -888,35 +888,23 @@ def build_league_history(monthly_df, roster_df, raw_df, PREMIER_SIZE=10, MOVE_N=
         ]["User"].tolist()
 
         # -----------------------------
-        # MONTHLY TOTALS
-        # -----------------------------
-        m = (
-            df[df["MonthP"] == month]
-            .set_index("User")["steps"]
-            .reindex(active_users, fill_value=0)
-            .reset_index()
-        )
-
-        m.columns = ["User", "total_steps"]
-
-        if m.empty:
-            continue
-
-        # -----------------------------
-        # POINTS
+        # CURRENT MONTH PERFORMANCE
         # -----------------------------
         metrics = compute_month_metrics(raw_df, month, active_users)
 
+        if metrics is None or metrics.empty:
+            continue
+
         scores = compute_points(metrics)
-        
+
         m = scores.merge(
-            metrics[["User","total_steps"]],
+            metrics[["User", "total_steps"]],
             on="User",
             how="left"
         )
 
         # -----------------------------
-        # FIRST MONTH
+        # FIRST MONTH (INITIAL SPLIT)
         # -----------------------------
         if i == 0:
 
@@ -925,28 +913,40 @@ def build_league_history(monthly_df, roster_df, raw_df, PREMIER_SIZE=10, MOVE_N=
             m["League"] = "Championship"
             m.loc[m.head(PREMIER_SIZE).index, "League"] = "Premier"
 
+            m["Promoted"] = False
+            m["Relegated"] = False
+
         else:
 
-            m["League"] = m["User"].map(prev_leagues)
+            # -----------------------------
+            # START WITH PREVIOUS LEAGUE
+            # -----------------------------
+            m["League"] = m["User"].map(
+                prev_table.set_index("User")["League"]
+            )
 
-            # new players start in Championship
+            # new users → Championship
             m["League"] = m["League"].fillna("Championship")
 
-        # flags
-        m["Promoted"] = False
-        m["Relegated"] = False
+            m["Promoted"] = False
+            m["Relegated"] = False
 
-        # -----------------------------
-        # PROMOTION / RELEGATION
-        # -----------------------------
-        if i > 0:
+            # -----------------------------
+            # 🔥 CRITICAL FIX
+            # Use PREVIOUS MONTH standings
+            # -----------------------------
+            prev = prev_table.copy()
 
-            prem = m[m["League"] == "Premier"].sort_values("points", ascending=False)
-            champ = m[m["League"] == "Championship"].sort_values("points", ascending=False)
+            prev_prem = prev[prev["League"] == "Premier"] \
+                .sort_values("Rank")
 
-            relegated = prem.tail(MOVE_N)["User"]
-            promoted = champ.head(MOVE_N)["User"]
+            prev_champ = prev[prev["League"] == "Championship"] \
+                .sort_values("Rank")
 
+            relegated = prev_prem.tail(MOVE_N)["User"]
+            promoted = prev_champ.head(MOVE_N)["User"]
+
+            # Apply movement
             m.loc[m["User"].isin(relegated), "League"] = "Championship"
             m.loc[m["User"].isin(promoted), "League"] = "Premier"
 
@@ -954,34 +954,7 @@ def build_league_history(monthly_df, roster_df, raw_df, PREMIER_SIZE=10, MOVE_N=
             m.loc[m["User"].isin(promoted), "Promoted"] = True
 
         # -----------------------------
-        # GUARANTEE PREMIER SIZE
-        # -----------------------------
-        prem = m[m["League"] == "Premier"]
-
-        if len(prem) < PREMIER_SIZE:
-
-            needed = PREMIER_SIZE - len(prem)
-
-            extra = (
-                m[m["League"] == "Championship"]
-                .sort_values("points", ascending=False)
-                .head(needed)["User"]
-            )
-
-            m.loc[m["User"].isin(extra), "League"] = "Premier"
-
-        if len(prem) > PREMIER_SIZE:
-
-            overflow = (
-                m[m["League"] == "Premier"]
-                .sort_values("points")
-                .head(len(prem) - PREMIER_SIZE)["User"]
-            )
-
-            m.loc[m["User"].isin(overflow), "League"] = "Championship"
-
-        # -----------------------------
-        # FINAL RANKS
+        # RANK WITHIN LEAGUE (CURRENT MONTH PERFORMANCE)
         # -----------------------------
         m["Rank"] = (
             m.groupby("League")["points"]
@@ -994,7 +967,8 @@ def build_league_history(monthly_df, roster_df, raw_df, PREMIER_SIZE=10, MOVE_N=
 
         history.append(m)
 
-        prev_leagues = m.set_index("User")["League"].to_dict()
+        # 👇 store FULL table for next iteration
+        prev_table = m.copy()
 
     return pd.concat(history, ignore_index=True)
 
