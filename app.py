@@ -888,7 +888,7 @@ def build_league_history(monthly_df, roster_df, raw_df, PREMIER_SIZE=10, MOVE_N=
         ]["User"].tolist()
 
         # -----------------------------
-        # CURRENT MONTH PERFORMANCE
+        # PERFORMANCE
         # -----------------------------
         metrics = compute_month_metrics(raw_df, month, active_users)
 
@@ -904,61 +904,80 @@ def build_league_history(monthly_df, roster_df, raw_df, PREMIER_SIZE=10, MOVE_N=
         )
 
         # -----------------------------
-        # FIRST MONTH
+        # MONTH 1 → ALL IN PREMIER
         # -----------------------------
         if i == 0:
 
-            m = m.sort_values("points", ascending=False).reset_index(drop=True)
-
-            m["League"] = "Championship"
-            m.loc[:PREMIER_SIZE-1, "League"] = "Premier"
+            m["League"] = "Premier"
+            m["Promoted"] = False
+            m["Relegated"] = False
 
         else:
 
             prev = prev_table.copy()
 
-            # 🔥 Step 1: start from previous league
+            # -----------------------------
+            # START WITH PREVIOUS LEAGUE
+            # -----------------------------
             m["League"] = m["User"].map(prev.set_index("User")["League"])
+
+            # New users → Championship
             m["League"] = m["League"].fillna("Championship")
 
-            # 🔥 Step 2: get movement from PREVIOUS month
+            # -----------------------------
+            # REMOVE INACTIVE USERS FROM PREVIOUS
+            # -----------------------------
+            prev = prev[prev["User"].isin(active_users)]
+
+            # -----------------------------
+            # PROMOTION / RELEGATION
+            # -----------------------------
             prev_prem = prev[prev["League"] == "Premier"].sort_values("Rank")
             prev_champ = prev[prev["League"] == "Championship"].sort_values("Rank")
 
             relegated = prev_prem.tail(MOVE_N)["User"].tolist()
             promoted = prev_champ.head(MOVE_N)["User"].tolist()
 
-            # 🔥 Step 3: apply movement
+            # Apply movement
             m.loc[m["User"].isin(relegated), "League"] = "Championship"
             m.loc[m["User"].isin(promoted), "League"] = "Premier"
 
             # -----------------------------
-            # 🔥 Step 4: FORCE EXACT SIZE (CRITICAL FIX)
+            # 🔥 HANDLE LEAVERS (CRITICAL FIX)
             # -----------------------------
-            prem = m[m["League"] == "Premier"]
+            current_prem = m[m["League"] == "Premier"]["User"].tolist()
 
-            if len(prem) != PREMIER_SIZE:
+            if len(current_prem) < PREMIER_SIZE:
 
-                # Rebuild Premier STRICTLY from previous logic
-                base_prem = prev_prem.head(PREMIER_SIZE - MOVE_N)["User"].tolist()
+                needed = PREMIER_SIZE - len(current_prem)
 
-                final_prem = list(set(base_prem + promoted))
+                extra_promotions = (
+                    m[
+                        (m["League"] == "Championship") &
+                        (~m["User"].isin(promoted))
+                    ]
+                    .sort_values("points", ascending=False)
+                    .head(needed)["User"]
+                    .tolist()
+                )
 
-                m["League"] = "Championship"
-                m.loc[m["User"].isin(final_prem), "League"] = "Premier"
+                m.loc[m["User"].isin(extra_promotions), "League"] = "Premier"
+
+                promoted.extend(extra_promotions)
+
+            # Flags
+            m["Promoted"] = m["User"].isin(promoted)
+            m["Relegated"] = m["User"].isin(relegated)
 
         # -----------------------------
-        # RANKING (CURRENT MONTH ONLY)
+        # RANK WITHIN LEAGUE
         # -----------------------------
         m["Rank"] = (
             m.groupby("League")["points"]
             .rank(method="first", ascending=False)
         )
 
-        m["Promoted"] = m["User"].isin(promoted) if i > 0 else False
-        m["Relegated"] = m["User"].isin(relegated) if i > 0 else False
         m["Champion"] = m["Rank"] == 1
-
         m["MonthP"] = month
         m["Month"] = month.to_timestamp("M")
 
