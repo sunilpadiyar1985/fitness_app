@@ -98,6 +98,9 @@ for gid in YEAR_TABS:
 
     for i in range(0, len(records), BATCH_SIZE):
         batch = records[i:i+BATCH_SIZE]
-        supabase.table("daily_health_metrics").upsert(batch).execute()
+        supabase.table("daily_health_metrics").upsert(
+            batch,
+            on_conflict="user_id,date,metric"
+        ).execute()
 
 print("✅ Incremental sync complete")
