@@ -44,7 +44,7 @@ else:
 
 # Safety window (handles edits)
 if latest_date is not None:
-    cutoff_date = latest_date - timedelta(days=7)
+    cutoff_date = latest_date - timedelta(days=30)
 else:
     cutoff_date = None
 
@@ -71,12 +71,16 @@ for gid in YEAR_TABS:
 
     df_long["date"] = pd.to_datetime(df_long["date"], format="%d-%b-%Y", errors="coerce")
     df_long["steps"] = pd.to_numeric(df_long["steps"], errors="coerce").fillna(0)
+    df_long["steps"] = df_long["steps"].astype(int)   # 🔥 FIX
 
     df_long = df_long.dropna(subset=["date"])
 
-    # 🔥 FILTER ONLY NEW / RECENT DATA
+    # 🔥 FILTER FIRST (still datetime)
     if cutoff_date is not None:
         df_long = df_long[df_long["date"] >= cutoff_date]
+
+    # 🔥 THEN convert to string
+    df_long["date"] = df_long["date"].dt.strftime("%Y-%m-%d")
 
     df_long["user_id"] = df_long["User"].map(user_map)
     df_long = df_long.dropna(subset=["user_id"])
