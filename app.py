@@ -16,30 +16,41 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 # connect
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-def render_navbar(active="Home"):
+def render_navbar(active="Dashboard"):
 
-    pages = ["Home", "Guide", "Matches", "Pool", "Board", "Analytics", "My Stats"]
+    pages = [
+        "Dashboard",
+        "Leaderboard",
+        "League",
+        "Players",
+        "Stats",
+        "Badges",
+        "History"
+    ]
 
-    nav_html = f'''
-    <div class="navbar">
-        <div class="nav-logo">
-            <span>Steps</span> League
-        </div>
-        <div class="nav-links">
-    '''
+    nav_html = f"""
+<div class="navbar">
+
+    <div class="nav-logo">
+        <span>Steps</span> League
+    </div>
+
+    <div class="nav-links">
+"""
+
     for p in pages:
         cls = "nav-pill active" if p == active else "nav-pill"
         nav_html += f'<div class="{cls}">{p}</div>'
 
-    nav_html += '''
-        </div>
-
-        <div class="nav-points">
-            1000 pts
-        </div>
-
+    nav_html += """
     </div>
-    '''
+
+    <div class="nav-points">
+        🏆 League
+    </div>
+
+</div>
+"""
 
     st.html(nav_html)
     
