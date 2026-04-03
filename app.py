@@ -26,17 +26,26 @@ def render_navbar():
         "Leaderboard",
         "League",
         "Players",
-
-        "History"
+        "Stats"
     ]
 
+    # NAVBAR WRAPPER (SAFE)
+    st.markdown("""
+    <div style="
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        padding: 12px 16px;
+        border-radius: 14px;
+        margin-bottom: 16px;
+        box-shadow: 0 10px 30px rgba(99,102,241,0.35);
+    ">
+    """, unsafe_allow_html=True)
 
-    cols = st.columns([2,6,2])  # ✅ THIS WAS MISSING
+    cols = st.columns([2,6])
 
     # LOGO
     with cols[0]:
         st.markdown(
-            '<div class="nav-logo"><span>Steps</span> League</div>',
+            '<div style="font-weight:700;font-size:20px;color:white;"><span style="color:#fbbf24;">Steps</span></div>',
             unsafe_allow_html=True
         )
 
@@ -47,18 +56,13 @@ def render_navbar():
         for i, p in enumerate(pages):
             if nav_cols[i].button(
                 p,
-                use_container_width=True,  # ✅ IMPORTANT
+                use_container_width=True,
                 type="primary" if st.session_state.page == p else "secondary"
             ):
                 st.session_state.page = p
                 st.rerun()
 
-    # RIGHT SIDE
-    #with cols[2]:
-    #    st.markdown(
-    #        '<div class="nav-points">🏆 League</div>',
-    #        unsafe_allow_html=True
-    #    )
+    st.markdown("</div>", unsafe_allow_html=True)
     
 render_navbar()
 page = st.session_state.page
@@ -184,28 +188,6 @@ body {
     padding-left: 1rem !important;
     padding-right: 1rem !important;
 }
-
-/* =========================
-   🔥 NAVBAR FIX (REAL FIX)
-========================= */
-
-/* Apply gradient to FIRST container (navbar area) */
-section.main > div:first-child {
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    padding: 12px 16px;
-    border-radius: 14px;
-    margin-bottom: 16px;
-
-    box-shadow: 0 10px 30px rgba(99,102,241,0.35);
-}
-
-/* Dark mode */
-@media (prefers-color-scheme: dark) {
-    section.main > div:first-child {
-        background: linear-gradient(135deg, #312e81, #1e1b4b);
-    }
-}
-
 /* =========================
    BUTTONS (NAV PILLS)
 ========================= */
