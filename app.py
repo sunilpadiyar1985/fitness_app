@@ -22,14 +22,11 @@ def render_navbar(active="Home"):
 
     nav_html = f'''
     <div class="navbar">
-
         <div class="nav-logo">
             <span>Steps</span> League
         </div>
-
         <div class="nav-links">
     '''
-
     for p in pages:
         cls = "nav-pill active" if p == active else "nav-pill"
         nav_html += f'<div class="{cls}">{p}</div>'
@@ -44,7 +41,7 @@ def render_navbar(active="Home"):
     </div>
     '''
 
-    st.markdown(nav_html, unsafe_allow_html=True)
+    st.html(nav_html)
     
 render_navbar("Home")
 
@@ -116,7 +113,8 @@ top_improved   = pd.Series(dtype=float)
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-
+header { display: none !important; }
+button[kind="header"] { display: none !important; }
 /* =========================
    GLOBAL
 ========================= */
@@ -141,9 +139,9 @@ body {
 }
 
 .block-container {
-    padding-top: 0.5rem;
-    padding-left: 1rem;
-    padding-right: 1rem;
+    padding-top: 0.5rem !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
 }
 
 /* =========================
