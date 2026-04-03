@@ -227,11 +227,17 @@ div.stButton > button[kind="secondary"] {
 .nav-logo {
     font-size: 20px;
     font-weight: 700;
-    color: white;
+    color: #111;
 }
 
 .nav-logo span {
     color: #fbbf24;
+}
+
+@media (prefers-color-scheme: dark) {
+    .nav-logo {
+        color: white;
+    }
 }
 
 /* =========================
