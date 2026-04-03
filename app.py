@@ -2109,32 +2109,32 @@ if "menu_open" not in st.session_state:
 # -------------------------
 # HEADER
 # -------------------------
-col1, col2, col3 = st.columns([1, 6, 1])
+#col1, col2, col3 = st.columns([1, 6, 1])
 
-with col1:
-    if st.button("☰", key="menu_btn"):
-        st.session_state.menu_open = not st.session_state.menu_open
+#with col1:
+#    if st.button("☰", key="menu_btn"):
+#        st.session_state.menu_open = not st.session_state.menu_open
 
-with col2:
-    st.markdown("""
-    <div class="main-header" style="
-        padding: 18px 22px;
-        border-radius: 18px;
-        margin-bottom: 6px;
-    ">
-        <div style="font-size:26px; font-weight:700;">
-            🏃 Steps League
-        </div>
-        <div style="font-size:14px;">
-            Consistency • Competition • Community
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+#with col2:
+#    st.markdown("""
+#    <div class="main-header" style="
+#        padding: 18px 22px;
+#        border-radius: 18px;
+#        margin-bottom: 6px;
+#    ">
+#        <div style="font-size:26px; font-weight:700;">
+#            🏃 Steps League
+#        </div>
+#        <div style="font-size:14px;">
+#            Consistency • Competition • Community
+#        </div>
+#    </div>
+#    """, unsafe_allow_html=True)
 
-with col3:
-    if st.button("🔄", key="refresh_btn"):
-        st.cache_data.clear()
-        st.rerun()
+#with col3:
+#    if st.button("🔄", key="refresh_btn"):
+#        st.cache_data.clear()
+#        st.rerun()
 
 
 # -------------------------
