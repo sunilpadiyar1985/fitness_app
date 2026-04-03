@@ -195,15 +195,16 @@ div.stButton > button {
     border-radius: 999px;
     font-weight: 500;
     height: 36px;
-
-    white-space: nowrap !important;
-    overflow: hidden;
-    text-overflow: ellipsis;
-
     font-size: 13px;
     padding: 6px 12px;
 
-    color: white;
+    color: #111;  /* 👈 DARK text for light mode */
+}
+
+@media (prefers-color-scheme: dark) {
+    div.stButton > button {
+        color: white;
+    }
 }
 
 /* ACTIVE TAB */
