@@ -44,23 +44,23 @@ def render_navbar():
 
     # NAV BUTTONS
     with cols[1]:
-        nav_cols = st.columns(len(pages))
+        nav_cols = st.columns([1.2]*len(pages))
 
         for i, p in enumerate(pages):
             if nav_cols[i].button(
                 p,
-                use_container_width=True,
+                use_container_width=False,
                 type="primary" if st.session_state.page == p else "secondary"
             ):
                 st.session_state.page = p
                 st.rerun()
 
     # RIGHT SIDE
-    with cols[2]:
-        st.markdown(
-            '<div class="nav-points">🏆 League</div>',
-            unsafe_allow_html=True
-        )
+    #with cols[2]:
+    #    st.markdown(
+    #        '<div class="nav-points">🏆 League</div>',
+    #        unsafe_allow_html=True
+    #    )
 
     st.markdown('</div>', unsafe_allow_html=True)
     
@@ -193,12 +193,13 @@ body {
    NAVBAR CONTAINER (GRADIENT BACK)
 ========================= */
 .navbar-container {
-    padding: 12px 16px;
-    border-radius: 18px;
-    margin-bottom: 16px;
+    padding: 10px 14px;
+    border-radius: 14px;
+    margin-bottom: 12px;
 
     background: linear-gradient(135deg, #eef2ff, #e0e7ff);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+
+    box-shadow: 0 6px 16px rgba(0,0,0,0.08);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -248,10 +249,14 @@ div.stButton > button[kind="primary"] {
 .nav-points {
     background: linear-gradient(135deg, #f59e0b, #f97316);
     color: black;
-    padding: 8px 14px;
+
+    padding: 6px 10px;
     border-radius: 999px;
+
+    font-size: 12px;
     font-weight: 600;
-    text-align: center;
+
+    display: inline-block;
 }
 
 /* =========================
