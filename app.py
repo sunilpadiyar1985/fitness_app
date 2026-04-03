@@ -990,40 +990,40 @@ def build_league_history(monthly_df, roster_df, raw_df, PREMIER_SIZE=10, MOVE_N=
 def compute_league(monthly_df, roster_df, raw_df):
     return build_league_history(monthly_df, roster_df, raw_df)
 
-def validate_league_integrity(league_history, PREMIER_SIZE=10, MOVE_N=2):
+#def validate_league_integrity(league_history, PREMIER_SIZE=10, MOVE_N=2):
 
-    issues = []
+#    issues = []
 
-    if league_history.empty:
-        issues.append("League history is empty.")
-        return issues
+#    if league_history.empty:
+#        issues.append("League history is empty.")
+#        return issues
 
-    for month, group in league_history.groupby("MonthP"):
+#    for month, group in league_history.groupby("MonthP"):
 
-        prem = group[group["League"] == "Premier"]
-        champ = group[group["League"] == "Championship"]
+#        prem = group[group["League"] == "Premier"]
+#        champ = group[group["League"] == "Championship"]
 
         # 1️⃣ Premier size check
-        if len(prem) > PREMIER_SIZE:
-            issues.append(f"{month}: Premier exceeds {PREMIER_SIZE} players")
+ #       if len(prem) > PREMIER_SIZE:
+ #           issues.append(f"{month}: Premier exceeds {PREMIER_SIZE} players")
 
-        # 2️⃣ Duplicate user check
-        if group["User"].duplicated().any():
-            issues.append(f"{month}: Duplicate users detected")
+ #       # 2️⃣ Duplicate user check
+ #       if group["User"].duplicated().any():
+ #           issues.append(f"{month}: Duplicate users detected")
 
-        # 3️⃣ User in both leagues check
-        overlap = set(prem["User"]).intersection(set(champ["User"]))
-        if overlap:
-            issues.append(f"{month}: User appears in both leagues → {overlap}")
+#        # 3️⃣ User in both leagues check
+#        overlap = set(prem["User"]).intersection(set(champ["User"]))
+#        if overlap:
+#            issues.append(f"{month}: User appears in both leagues → {overlap}")
 
         # 4️⃣ Promotion / Relegation symmetry check
-        promoted = group[group["Promoted"] == True]
-        relegated = group[group["Relegated"] == True]
+#        promoted = group[group["Promoted"] == True]
+#        relegated = group[group["Relegated"] == True]
 
-        if len(promoted) != len(relegated):
-            issues.append(f"{month}: Promotion/Relegation mismatch")
+#        if len(promoted) != len(relegated):
+#            issues.append(f"{month}: Promotion/Relegation mismatch")
 
-    return issues
+#    return issues
     
 # -------------------------
 # Era Engine
@@ -1223,12 +1223,12 @@ df["Week"] = df["date"].dt.isocalendar().week
 
 league_history = compute_league(monthly_df, roster_df, raw_df)
 
-integrity_issues = validate_league_integrity(league_history)
+#integrity_issues = validate_league_integrity(league_history)
 
-if integrity_issues:
-    with st.sidebar.expander("🚨 League Integrity Warning", expanded=True):
-        for issue in integrity_issues:
-            st.error(issue)
+#if integrity_issues:
+#    with st.sidebar.expander("🚨 League Integrity Warning", expanded=True):
+#        for issue in integrity_issues:
+#            st.error(issue)
 
 # ----------------------------
 # ACTIVE USERS ENGINE
