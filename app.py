@@ -30,7 +30,6 @@ def render_navbar():
         "History"
     ]
 
-    st.markdown('<div class="navbar-container">', unsafe_allow_html=True)
 
     cols = st.columns([2,6,2])  # ✅ THIS WAS MISSING
 
@@ -60,8 +59,6 @@ def render_navbar():
     #        '<div class="nav-points">🏆 League</div>',
     #        unsafe_allow_html=True
     #    )
-
-    st.markdown('</div>', unsafe_allow_html=True)
     
 render_navbar()
 page = st.session_state.page
