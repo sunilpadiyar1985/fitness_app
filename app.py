@@ -31,7 +31,9 @@ def render_navbar():
         "History"
     ]
 
-    cols = st.columns([2,6,2])
+    st.markdown('<div class="navbar-container">', unsafe_allow_html=True)
+
+    cols = st.columns([2,6,2])  # ✅ THIS WAS MISSING
 
     # LOGO
     with cols[0]:
@@ -59,6 +61,8 @@ def render_navbar():
             '<div class="nav-points">🏆 League</div>',
             unsafe_allow_html=True
         )
+
+    st.markdown('</div>', unsafe_allow_html=True)
     
 render_navbar()
 page = st.session_state.page
@@ -152,8 +156,16 @@ top_improved   = pd.Series(dtype=float)
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* =========================
+   HIDE STREAMLIT DEFAULT UI
+========================= */
+#MainMenu, footer, header {
+    visibility: hidden;
+}
 header { display: none !important; }
 button[kind="header"] { display: none !important; }
+
 /* =========================
    GLOBAL
 ========================= */
@@ -161,7 +173,6 @@ html, body, [class*="css"] {
     font-family: 'Poppins', sans-serif;
 }
 
-/* Background (light + dark aware) */
 body {
     background: radial-gradient(circle at top, #eef2ff, #f9fafb);
 }
@@ -172,17 +183,6 @@ body {
     }
 }
 
-div.stButton > button {
-    border-radius: 999px;
-    font-weight: 500;
-    height: 38px;
-}
-
-/* Remove default Streamlit junk */
-#MainMenu, footer, header {
-    visibility: hidden;
-}
-
 .block-container {
     padding-top: 0.5rem !important;
     padding-left: 1rem !important;
@@ -190,97 +190,68 @@ div.stButton > button {
 }
 
 /* =========================
-   NAVBAR (NEW)
+   NAVBAR CONTAINER (GRADIENT BACK)
 ========================= */
-.navbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    padding: 12px 18px;
+.navbar-container {
+    padding: 12px 16px;
+    border-radius: 18px;
     margin-bottom: 16px;
 
-    border-radius: 18px;
-
-    background: rgba(255,255,255,0.65);
-    backdrop-filter: blur(12px);
-
+    background: linear-gradient(135deg, #eef2ff, #e0e7ff);
     box-shadow: 0 8px 24px rgba(0,0,0,0.08);
 }
 
-/* Dark */
 @media (prefers-color-scheme: dark) {
-    .navbar {
-        background: rgba(15,23,42,0.7);
-        box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    .navbar-container {
+        background: linear-gradient(135deg, #1e293b, #020617);
     }
 }
 
-/* Logo */
+/* =========================
+   BUTTONS (NAV PILLS FIX)
+========================= */
+div.stButton > button {
+    border-radius: 999px;
+    font-weight: 500;
+    height: 36px;
+
+    white-space: nowrap !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    font-size: 13px;
+    padding: 6px 10px;
+}
+
+/* ACTIVE BUTTON */
+div.stButton > button[kind="primary"] {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+    color: white !important;
+    border: none !important;
+}
+
+/* =========================
+   LOGO
+========================= */
 .nav-logo {
     font-size: 20px;
     font-weight: 700;
-    letter-spacing: 1px;
 }
 
 .nav-logo span {
     color: #f59e0b;
 }
 
-/* Nav buttons container */
-.nav-links {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-/* Pills */
-.nav-pill {
-    padding: 8px 14px;
-    border-radius: 999px;
-
-    font-size: 14px;
-    font-weight: 500;
-
-    cursor: pointer;
-
-    background: rgba(0,0,0,0.04);
-    color: #333;
-
-    transition: all 0.2s ease;
-}
-
-.nav-pill:hover {
-    background: rgba(0,0,0,0.08);
-    transform: translateY(-1px);
-}
-
-/* Active */
-.nav-pill.active {
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    color: white;
-    box-shadow: 0 4px 14px rgba(99,102,241,0.4);
-}
-
-/* Dark pills */
-@media (prefers-color-scheme: dark) {
-    .nav-pill {
-        background: rgba(255,255,255,0.06);
-        color: #d1d5db;
-    }
-
-    .nav-pill:hover {
-        background: rgba(255,255,255,0.12);
-    }
-}
-
-/* Points badge */
+/* =========================
+   RIGHT BADGE
+========================= */
 .nav-points {
     background: linear-gradient(135deg, #f59e0b, #f97316);
     color: black;
     padding: 8px 14px;
     border-radius: 999px;
     font-weight: 600;
+    text-align: center;
 }
 
 /* =========================
@@ -289,17 +260,9 @@ div.stButton > button {
 .card {
     background: rgba(255,255,255,0.65);
     backdrop-filter: blur(10px);
-
     border-radius: 18px;
     padding: 16px;
-
     box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-    transition: all 0.25s ease;
-}
-
-.card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 26px rgba(0,0,0,0.12);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -309,24 +272,13 @@ div.stButton > button {
 }
 
 /* =========================
-   METRICS
+   TICKER
 ========================= */
-.metric {
-    font-size: 24px;
-    font-weight: 700;
-}
-
-.metric-label {
-    font-size: 12px;
-    color: #888;
-}
-
 .ticker-fixed {
     position: fixed;
     bottom: 12px;
     left: 20px;
     right: 20px;
-
     z-index: 9999;
 
     background: rgba(255,255,255,0.9);
@@ -336,7 +288,6 @@ div.stButton > button {
     padding: 10px 16px;
 
     box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-
     font-size: 14px;
 }
 
@@ -347,34 +298,16 @@ div.stButton > button {
     }
 }
 
-
 /* =========================
    MOBILE
 ========================= */
 @media (max-width: 768px) {
 
-    .navbar {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-    }
-
-    .nav-links {
-        width: 100%;
-        overflow-x: auto;
-        flex-wrap: nowrap;
-    }
-
-    .nav-pill {
-        white-space: nowrap;
-    }
-
     .block-container {
-        padding-left: 8px;
-        padding-right: 8px;
+        padding-left: 8px !important;
+        padding-right: 8px !important;
     }
 }
-
 </style>
 """, unsafe_allow_html=True)
 
