@@ -61,28 +61,28 @@ def render_navbar():
         )
     
 render_navbar()
-
 page = st.session_state.page
+
 if page == "Dashboard":
-    render_dashboard()
+    pass  # 👈 keep your existing code running
 
 elif page == "Leaderboard":
-    render_leaderboard()
+    st.info("Leaderboard coming soon")
 
 elif page == "League":
-    render_league()
+    st.info("League view coming soon")
 
 elif page == "Players":
-    render_players()
+    st.info("Players view coming soon")
 
 elif page == "Stats":
-    render_stats()
+    st.info("Stats coming soon")
 
 elif page == "Badges":
-    render_badges()
+    st.info("Badges coming soon")
 
 elif page == "History":
-    render_history()
+    st.info("History coming soon")
 
 st.set_page_config(page_title="Steps League – Monthly Results", page_icon="🏃", layout="wide", )
 if not st.session_state.get("is_admin", False):
