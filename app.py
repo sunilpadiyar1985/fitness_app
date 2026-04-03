@@ -16,6 +16,36 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 # connect
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
+def render_navbar(active="Home"):
+
+    pages = ["Home", "Guide", "Matches", "Pool", "Board", "Analytics", "My Stats"]
+
+    nav_html = f'''
+    <div class="navbar">
+
+        <div class="nav-logo">
+            <span>Steps</span> League
+        </div>
+
+        <div class="nav-links">
+    '''
+
+    for p in pages:
+        cls = "nav-pill active" if p == active else "nav-pill"
+        nav_html += f'<div class="{cls}">{p}</div>'
+
+    nav_html += '''
+        </div>
+
+        <div class="nav-points">
+            1000 pts
+        </div>
+
+    </div>
+    '''
+
+    st.markdown(nav_html, unsafe_allow_html=True)
+    
 render_navbar("Home")
 
 st.set_page_config(page_title="Steps League – Monthly Results", page_icon="🏃", layout="wide", )
@@ -279,36 +309,6 @@ body {
 """, unsafe_allow_html=True)
 
 #css end
-
-def render_navbar(active="Home"):
-
-    pages = ["Home", "Guide", "Matches", "Pool", "Board", "Analytics", "My Stats"]
-
-    nav_html = f'''
-    <div class="navbar">
-
-        <div class="nav-logo">
-            <span>Steps</span> League
-        </div>
-
-        <div class="nav-links">
-    '''
-
-    for p in pages:
-        cls = "nav-pill active" if p == active else "nav-pill"
-        nav_html += f'<div class="{cls}">{p}</div>'
-
-    nav_html += '''
-        </div>
-
-        <div class="nav-points">
-            1000 pts
-        </div>
-
-    </div>
-    '''
-
-    st.markdown(nav_html, unsafe_allow_html=True)
 
 def show_global_league_moments(events_df):
     
