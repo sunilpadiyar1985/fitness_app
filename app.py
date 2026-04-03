@@ -189,28 +189,28 @@ body {
 }
 
 /* =========================
-   NAVBAR CONTAINER (GRADIENT BACK)
+   🔥 NAVBAR FIX (REAL FIX)
 ========================= */
-.navbar-container {
-    padding: 10px 14px;
+
+/* Apply gradient to FIRST container (navbar area) */
+section.main > div:first-child {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    padding: 12px 16px;
     border-radius: 14px;
-    margin: 10px 0 16px 0;
-
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);  /* 🔥 STRONG gradient */
-
-    color: white;
+    margin-bottom: 16px;
 
     box-shadow: 0 10px 30px rgba(99,102,241,0.35);
 }
 
+/* Dark mode */
 @media (prefers-color-scheme: dark) {
-    .navbar-container {
+    section.main > div:first-child {
         background: linear-gradient(135deg, #312e81, #1e1b4b);
     }
 }
 
 /* =========================
-   BUTTONS (NAV PILLS FIX)
+   BUTTONS (NAV PILLS)
 ========================= */
 div.stButton > button {
     border-radius: 999px;
@@ -222,16 +222,19 @@ div.stButton > button {
     text-overflow: ellipsis;
 
     font-size: 13px;
-    padding: 6px 10px;
+    padding: 6px 12px;
+
+    color: white;
 }
 
-/* ACTIVE BUTTON */
+/* ACTIVE TAB */
 div.stButton > button[kind="primary"] {
-    background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+    background: rgba(255,255,255,0.25) !important;
     color: white !important;
     border: none !important;
 }
 
+/* INACTIVE TAB */
 div.stButton > button[kind="secondary"] {
     background: rgba(255,255,255,0.15);
     color: white;
@@ -249,22 +252,6 @@ div.stButton > button[kind="secondary"] {
 
 .nav-logo span {
     color: #fbbf24;
-}
-
-/* =========================
-   RIGHT BADGE
-========================= */
-.nav-points {
-    background: linear-gradient(135deg, #f59e0b, #f97316);
-    color: black;
-
-    padding: 6px 10px;
-    border-radius: 999px;
-
-    font-size: 12px;
-    font-weight: 600;
-
-    display: inline-block;
 }
 
 /* =========================
