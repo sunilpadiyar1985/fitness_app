@@ -232,16 +232,23 @@ div.stButton > button[kind="primary"] {
     border: none !important;
 }
 
+div.stButton > button[kind="secondary"] {
+    background: rgba(255,255,255,0.15);
+    color: white;
+    border: none;
+}
+
 /* =========================
    LOGO
 ========================= */
 .nav-logo {
     font-size: 20px;
     font-weight: 700;
+    color: white;
 }
 
 .nav-logo span {
-    color: #f59e0b;
+    color: #fbbf24;
 }
 
 /* =========================
