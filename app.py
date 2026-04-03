@@ -972,10 +972,8 @@ def build_league_history(monthly_df, roster_df, raw_df, PREMIER_SIZE=10, MOVE_N=
         # -----------------------------
         # RANK WITHIN LEAGUE
         # -----------------------------
-        m["Rank"] = (
-            m.groupby("League")["points"]
-            .rank(method="first", ascending=False)
-        )
+        m = m.sort_values(["League", "points", "total_steps"], ascending=[True, False, False])
+        m["Rank"] = m.groupby("League").cumcount() + 1
 
         m["Champion"] = m["Rank"] == 1
         m["MonthP"] = month
