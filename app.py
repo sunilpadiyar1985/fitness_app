@@ -192,13 +192,15 @@ body {
    NAVBAR CONTAINER (GRADIENT BACK)
 ========================= */
 .navbar-container {
-    padding: 8px 12px;
-    border-radius: 12px;
-    margin-bottom: 10px;
+    padding: 10px 14px;
+    border-radius: 14px;
+    margin: 10px 0 16px 0;
 
-    background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);  /* 🔥 STRONG gradient */
 
-    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    color: white;
+
+    box-shadow: 0 10px 30px rgba(99,102,241,0.35);
 }
 
 @media (prefers-color-scheme: dark) {
