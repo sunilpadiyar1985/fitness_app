@@ -205,7 +205,7 @@ body {
 
 @media (prefers-color-scheme: dark) {
     .navbar-container {
-        background: linear-gradient(135deg, #1e293b, #020617);
+        background: linear-gradient(135deg, #312e81, #1e1b4b);
     }
 }
 
