@@ -16,7 +16,10 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 # connect
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-def render_navbar(active="Dashboard"):
+if "page" not in st.session_state:
+    st.session_state.page = "Dashboard"
+    
+def render_navbar():
 
     pages = [
         "Dashboard",
@@ -28,33 +31,58 @@ def render_navbar(active="Dashboard"):
         "History"
     ]
 
-    nav_html = f"""
-<div class="navbar">
+    cols = st.columns([2,6,2])
 
-    <div class="nav-logo">
-        <span>Steps</span> League
-    </div>
+    # LOGO
+    with cols[0]:
+        st.markdown(
+            '<div class="nav-logo"><span>Steps</span> League</div>',
+            unsafe_allow_html=True
+        )
 
-    <div class="nav-links">
-"""
+    # NAV BUTTONS
+    with cols[1]:
+        nav_cols = st.columns(len(pages))
 
-    for p in pages:
-        cls = "nav-pill active" if p == active else "nav-pill"
-        nav_html += f'<div class="{cls}">{p}</div>'
+        for i, p in enumerate(pages):
+            if nav_cols[i].button(
+                p,
+                use_container_width=True,
+                type="primary" if st.session_state.page == p else "secondary"
+            ):
+                st.session_state.page = p
+                st.rerun()
 
-    nav_html += """
-    </div>
-
-    <div class="nav-points">
-        🏆 League
-    </div>
-
-</div>
-"""
-
-    st.html(nav_html)
+    # RIGHT SIDE
+    with cols[2]:
+        st.markdown(
+            '<div class="nav-points">🏆 League</div>',
+            unsafe_allow_html=True
+        )
     
 render_navbar("Home")
+
+page = st.session_state.page
+if page == "Dashboard":
+    render_dashboard()
+
+elif page == "Leaderboard":
+    render_leaderboard()
+
+elif page == "League":
+    render_league()
+
+elif page == "Players":
+    render_players()
+
+elif page == "Stats":
+    render_stats()
+
+elif page == "Badges":
+    render_badges()
+
+elif page == "History":
+    render_history()
 
 st.set_page_config(page_title="Steps League – Monthly Results", page_icon="🏃", layout="wide", )
 if not st.session_state.get("is_admin", False):
@@ -142,6 +170,12 @@ body {
     body {
         background: radial-gradient(circle at top, #0f172a, #020617);
     }
+}
+
+div.stButton > button {
+    border-radius: 999px;
+    font-weight: 500;
+    height: 38px;
 }
 
 /* Remove default Streamlit junk */
@@ -287,6 +321,33 @@ body {
     color: #888;
 }
 
+.ticker-fixed {
+    position: fixed;
+    bottom: 12px;
+    left: 20px;
+    right: 20px;
+
+    z-index: 9999;
+
+    background: rgba(255,255,255,0.9);
+    backdrop-filter: blur(10px);
+
+    border-radius: 14px;
+    padding: 10px 16px;
+
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+
+    font-size: 14px;
+}
+
+@media (prefers-color-scheme: dark) {
+    .ticker-fixed {
+        background: rgba(28,31,38,0.9);
+        color: #fff;
+    }
+}
+
+
 /* =========================
    MOBILE
 ========================= */
@@ -360,17 +421,24 @@ def show_global_league_moments(events_df):
         
         st.markdown(f"""
         <style>
-        .ticker-box {{
-            background:#fff4f4;
-            border-radius:14px;
-            padding:10px 16px;
-            margin-top:8px;
-            margin-bottom:12px;
-            font-size:14px;
-            font-weight:500;
-            border:1px solid #ffd6d6;
+        .ticker-fixed {{
+            position: fixed;
+            bottom: 12px;
+            left: 20px;
+            right: 20px;
+            z-index: 9999;
+        
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(10px);
+        
+            border-radius: 14px;
+            padding: 10px 16px;
+        
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        
+            font-size: 14px;
+            font-weight: 500;
             overflow: hidden;
-            position: relative;
         }}
         
         .ticker-content {{
@@ -388,15 +456,15 @@ def show_global_league_moments(events_df):
             }}
         }}
         
-        @media (max-width: 768px) {{
-            .ticker-content {{
-                animation-duration: {int(speed * 0.7)}s;
-                font-size: 13px;
+        @media (prefers-color-scheme: dark) {{
+            .ticker-fixed {{
+                background: rgba(28,31,38,0.9);
+                color: #ffffff;
             }}
         }}
         </style>
         
-        <div class="ticker-box">
+        <div class="ticker-fixed">
             <div class="ticker-content">
                 🚨 {ticker_text}
             </div>
@@ -3980,3 +4048,5 @@ The real win condition is not podiums.
 
 The real win condition is showing up month after month.
 """)
+
+st.markdown("<div style='height:80px'></div>", unsafe_allow_html=True)
