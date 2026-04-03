@@ -7,6 +7,12 @@ import plotly.express as px
 import numpy as np
 import requests
 
+st.set_page_config(
+    page_title="Steps League – Monthly Results",
+    page_icon="🏃",
+    layout="wide",
+)
+
 # load env variables
 load_dotenv()
 
@@ -15,6 +21,7 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
 # connect
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+
 
 if "page" not in st.session_state:
     st.session_state.page = "Dashboard"
@@ -33,6 +40,8 @@ def render_navbar():
     st.markdown("""
     <div style="
         background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        position: relative;
+        z-index: 1000;
         padding: 12px 16px;
         border-radius: 14px;
         margin-bottom: 16px;
@@ -68,7 +77,7 @@ render_navbar()
 page = st.session_state.page
 
 if page == "Dashboard":
-    pass  # 👈 keep your existing code running
+   st.info("Dashboard coming soon")
 
 elif page == "Leaderboard":
     st.info("Leaderboard coming soon")
@@ -88,7 +97,7 @@ elif page == "Badges":
 elif page == "History":
     st.info("History coming soon")
 
-st.set_page_config(page_title="Steps League – Monthly Results", page_icon="🏃", layout="wide", )
+
 if not st.session_state.get("is_admin", False):
     st.markdown("""
     <style>
@@ -105,7 +114,7 @@ if not st.session_state.get("is_admin", False):
 MAINTENANCE_MODE = False   # ← switch ON / OFF
 
 def maintenance_gate():
-    st.set_page_config(page_title="Steps League – Maintenance", page_icon="🚧", layout="centered")
+    #st.set_page_config(page_title="Steps League – Maintenance", page_icon="🚧", layout="centered")
 
     st.markdown("""
     <div style="text-align:center; padding:40px;">
