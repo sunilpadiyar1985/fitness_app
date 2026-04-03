@@ -16,6 +16,8 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 # connect
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
+render_navbar("Home")
+
 st.set_page_config(page_title="Steps League – Monthly Results", page_icon="🏃", layout="wide", )
 if not st.session_state.get("is_admin", False):
     st.markdown("""
@@ -90,228 +92,186 @@ st.markdown("""
 ========================= */
 html, body, [class*="css"] {
     font-family: 'Poppins', sans-serif;
-    background-color: #f9fafb;
 }
 
-/* Remove top gap */
-header { display: none !important; }
+/* Background (light + dark aware) */
+body {
+    background: radial-gradient(circle at top, #eef2ff, #f9fafb);
+}
+
+@media (prefers-color-scheme: dark) {
+    body {
+        background: radial-gradient(circle at top, #0f172a, #020617);
+    }
+}
+
+/* Remove default Streamlit junk */
+#MainMenu, footer, header {
+    visibility: hidden;
+}
 
 .block-container {
-    padding-top: 0.3rem !important;
+    padding-top: 0.5rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
 }
 
 /* =========================
-   SIDEBAR
+   NAVBAR (NEW)
 ========================= */
-section[data-testid="stSidebar"] {
-    background-color: #fafafa;
+.navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 12px 18px;
+    margin-bottom: 16px;
+
+    border-radius: 18px;
+
+    background: rgba(255,255,255,0.65);
+    backdrop-filter: blur(12px);
+
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
 }
 
-button[kind="header"] {
-    display: none !important;
-}
-
-/* =========================
-   HEADER
-========================= */
-.main-header {
-    background: linear-gradient(135deg, #f8fafc, #eef2ff);
-    color: #111;
-}
-
-/* =========================
-   CARDS
-========================= */
-.card-winner {
-    border: 1px solid rgba(255, 215, 0, 0.5);
-
-    animation: winner-glow 2.5s ease-in-out infinite;
-
-    box-shadow:
-        0 0 10px rgba(255,215,0,0.3),
-        0 0 20px rgba(255,215,0,0.2);
-}
-
-@keyframes winner-glow {
-    0% {
-        box-shadow:
-            0 0 10px rgba(255,215,0,0.2),
-            0 0 20px rgba(255,215,0,0.1);
-    }
-    50% {
-        box-shadow:
-            0 0 22px rgba(255,215,0,0.6),
-            0 0 40px rgba(255,215,0,0.4);
-    }
-    100% {
-        box-shadow:
-            0 0 10px rgba(255,215,0,0.2),
-            0 0 20px rgba(255,215,0,0.1);
+/* Dark */
+@media (prefers-color-scheme: dark) {
+    .navbar {
+        background: rgba(15,23,42,0.7);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.4);
     }
 }
 
-.card-winner:hover {
-    transform: translateY(-4px) scale(1.02);
+/* Logo */
+.nav-logo {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 1px;
 }
 
-@keyframes winner-glow {
-    0% { box-shadow: 0 0 10px rgba(255,215,0,0.3); }
-    50% { box-shadow: 0 0 20px rgba(255,215,0,0.6); }
-    100% { box-shadow: 0 0 10px rgba(255,215,0,0.3); }
+.nav-logo span {
+    color: #f59e0b;
+}
+
+/* Nav buttons container */
+.nav-links {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Pills */
+.nav-pill {
+    padding: 8px 14px;
+    border-radius: 999px;
+
+    font-size: 14px;
+    font-weight: 500;
+
+    cursor: pointer;
+
+    background: rgba(0,0,0,0.04);
+    color: #333;
+
+    transition: all 0.2s ease;
+}
+
+.nav-pill:hover {
+    background: rgba(0,0,0,0.08);
+    transform: translateY(-1px);
+}
+
+/* Active */
+.nav-pill.active {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    box-shadow: 0 4px 14px rgba(99,102,241,0.4);
+}
+
+/* Dark pills */
+@media (prefers-color-scheme: dark) {
+    .nav-pill {
+        background: rgba(255,255,255,0.06);
+        color: #d1d5db;
+    }
+
+    .nav-pill:hover {
+        background: rgba(255,255,255,0.12);
+    }
+}
+
+/* Points badge */
+.nav-points {
+    background: linear-gradient(135deg, #f59e0b, #f97316);
+    color: black;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-weight: 600;
 }
 
 /* =========================
-   PODIUM COLORS
+   CARD SYSTEM
 ========================= */
-.card-gold {
-    background:#e8d9a8;
-    color:#222;
+.card {
+    background: rgba(255,255,255,0.65);
+    backdrop-filter: blur(10px);
+
+    border-radius: 18px;
+    padding: 16px;
+
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    transition: all 0.25s ease;
 }
 
-.card-silver {
-    background:#e5e5e5;
-    color:#222;
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 26px rgba(0,0,0,0.12);
 }
 
-.card-bronze {
-    background:#e0d0c0;
-    color:#222;
+@media (prefers-color-scheme: dark) {
+    .card {
+        background: rgba(28,31,38,0.7);
+    }
 }
 
 /* =========================
    METRICS
 ========================= */
-div[data-testid="metric-container"] {
-    border-radius: 14px;
-    padding: 12px;
-    background-color: #f7f8fa;
+.metric {
+    font-size: 24px;
+    font-weight: 700;
 }
 
-/* =========================
-   HALL CARDS
-========================= */
-.hall-card {
-    background:#f7f9fc;
-    padding:14px;
-    border-radius:14px;
-    text-align:center;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-}
-
-.hall-title {
-    font-size:14px;
-    font-weight:500;
-    color:#666;
-}
-
-.hall-name {
-    font-size:20px;
-    font-weight:600;
-    margin-top:6px;
-}
-
-.hall-badge {
-    display:inline-block;
-    margin-top:8px;
-    padding:4px 10px;
-    background:#e8f7ee;
-    color:#1b7f4b;
-    border-radius:999px;
-    font-size:12px;
-    font-weight:500;
+.metric-label {
+    font-size: 12px;
+    color: #888;
 }
 
 /* =========================
    MOBILE
 ========================= */
 @media (max-width: 768px) {
+
+    .navbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .nav-links {
+        width: 100%;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+    }
+
+    .nav-pill {
+        white-space: nowrap;
+    }
+
     .block-container {
-        padding-top: 0.3rem !important;
-    }
-
-    h1 { font-size: 1.6rem; }
-    h2 { font-size: 1.3rem; }
-    h3 { font-size: 1.1rem; }
-}
-
-/* =========================
-   DARK MODE (SINGLE CLEAN BLOCK)
-========================= */
-@media (prefers-color-scheme: dark) {
-
-    html, body {
-        background-color: #0e1117 !important;
-    }
-
-    h1, h2, h3, h4 {
-        color: #ffffff !important;
-    }
-
-    p, span, label {
-        color: #d0d0d0 !important;
-    }
-
-    section[data-testid="stSidebar"] {
-        background-color: #161a22 !important;
-    }
-
-    .card {
-        background: #1c1f26 !important;
-        color: #ffffff !important;
-    }
-
-    div[data-testid="metric-container"] {
-        background-color: #1c1f26 !important;
-        color: #ffffff !important;
-    }
-
-    /* Header */
-    .main-header {
-        background: linear-gradient(135deg, #1c1f26, #2a2f3a) !important;
-        color: #ffffff !important;
-    }
-
-    .main-header div {
-        color: #ffffff !important;
-    }
-
-    /* Podium stays dark text */
-    .card-gold,
-    .card-silver,
-    .card-bronze {
-        color:#222 !important;
-    }
-
-    /* Hall cards */
-    .hall-card {
-        background:#1c1f26 !important;
-        color:#ffffff !important;
-    }
-
-    .hall-title {
-        color:#bbbbbb !important;
-    }
-
-    .hall-badge {
-        background:#1f3d2b !important;
-        color:#4ade80 !important;
-    }
-
-    /* Ticker */
-    .ticker-box {
-        background: #2a1a1a !important;
-        color: #ffcccc !important;
-        border: 1px solid #663333 !important;
-    }
-
-    /* Select */
-    div[data-baseweb="select"] {
-        color: #ffffff !important;
-    }
-
-    /* Alerts */
-    .stAlert {
-        color: #ffffff !important;
+        padding-left: 8px;
+        padding-right: 8px;
     }
 }
 
@@ -320,6 +280,35 @@ div[data-testid="metric-container"] {
 
 #css end
 
+def render_navbar(active="Home"):
+
+    pages = ["Home", "Guide", "Matches", "Pool", "Board", "Analytics", "My Stats"]
+
+    nav_html = f'''
+    <div class="navbar">
+
+        <div class="nav-logo">
+            <span>Steps</span> League
+        </div>
+
+        <div class="nav-links">
+    '''
+
+    for p in pages:
+        cls = "nav-pill active" if p == active else "nav-pill"
+        nav_html += f'<div class="{cls}">{p}</div>'
+
+    nav_html += '''
+        </div>
+
+        <div class="nav-points">
+            1000 pts
+        </div>
+
+    </div>
+    '''
+
+    st.markdown(nav_html, unsafe_allow_html=True)
 
 def show_global_league_moments(events_df):
     
@@ -972,8 +961,10 @@ def build_league_history(monthly_df, roster_df, raw_df, PREMIER_SIZE=10, MOVE_N=
         # -----------------------------
         # RANK WITHIN LEAGUE
         # -----------------------------
-        m = m.sort_values(["League", "points", "total_steps"], ascending=[True, False, False])
-        m["Rank"] = m.groupby("League").cumcount() + 1
+        m["Rank"] = (
+            m.groupby("League")["points"]
+            .rank(method="dense", ascending=False)
+        )
 
         m["Champion"] = m["Rank"] == 1
         m["MonthP"] = month
