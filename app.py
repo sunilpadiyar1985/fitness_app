@@ -60,7 +60,7 @@ def render_navbar():
             unsafe_allow_html=True
         )
     
-render_navbar("Home")
+render_navbar()
 
 page = st.session_state.page
 if page == "Dashboard":
