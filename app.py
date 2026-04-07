@@ -191,7 +191,7 @@ body {
 
 /* Kill top spacing for first widget */
 .block-container .stSelectbox:first-of-type {
-    margin-top: -20px !important;
+    margin-top: -40px !important;
 }
 
 /* =========================
