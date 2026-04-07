@@ -55,10 +55,13 @@ def render_navbar():
                 if p == "🔄 Refresh":
                     st.cache_data.clear()
                     st.cache_resource.clear()
-                    st.session_state.clear()
-                    st.rerun()
-                else:
-                    st.session_state.page = p
+                
+                    # Reset only data-related state (optional)
+                    keys_to_keep = ["page"]
+                    for key in list(st.session_state.keys()):
+                        if key not in keys_to_keep:
+                            del st.session_state[key]
+                
                     st.rerun()
 
     # RIGHT SIDE
