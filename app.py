@@ -32,7 +32,7 @@ def render_navbar():
 
     st.markdown('<div class="navbar-container">', unsafe_allow_html=True)
 
-    cols = st.columns([2,6,2])  # ✅ THIS WAS MISSING
+    cols = st.columns([2,8])  # ✅ THIS WAS MISSING
 
     # LOGO
     with cols[0]:
