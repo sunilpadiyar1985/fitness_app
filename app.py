@@ -175,7 +175,7 @@ body {
     border-radius: 14px;
     margin: 10px 0 10px 0;
 
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);  /* 🔥 STRONG gradient */
+    #background: linear-gradient(135deg, #6366f1, #8b5cf6);  /* 🔥 STRONG gradient */
 
     color: white;
 
