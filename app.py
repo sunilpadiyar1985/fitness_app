@@ -22,12 +22,12 @@ if "page" not in st.session_state:
 def render_navbar():
 
     pages = [
-        "Dashboard",
-        "Leaderboard",
-        "League",
-        "Players",
-
-        "History"
+        "🏠 Monthly Results",
+        "👤 Player Profile",
+        "🏆 Hall of Fame",
+        "📜 League History",
+        "🎁 Wrapped",
+        "ℹ️ Readme: Our Dashboard"
     ]
 
     st.markdown('<div class="navbar-container">', unsafe_allow_html=True)
@@ -65,27 +65,6 @@ def render_navbar():
     
 render_navbar()
 page = st.session_state.page
-
-if page == "Dashboard":
-    pass  # 👈 keep your existing code running
-
-elif page == "Leaderboard":
-    st.info("Leaderboard coming soon")
-
-elif page == "League":
-    st.info("League view coming soon")
-
-elif page == "Players":
-    st.info("Players view coming soon")
-
-elif page == "Stats":
-    st.info("Stats coming soon")
-
-elif page == "Badges":
-    st.info("Badges coming soon")
-
-elif page == "History":
-    st.info("History coming soon")
 
 st.set_page_config(page_title="Steps League – Monthly Results", page_icon="🏃", layout="wide", )
 if not st.session_state.get("is_admin", False):
