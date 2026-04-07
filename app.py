@@ -30,39 +30,27 @@ def render_navbar():
 
     pages = ["Dashboard", "Leaderboard", "League", "Players", "Stats"]
 
-    st.markdown("""
-    <style>
-    section[data-testid="stVerticalBlock"] > div:has(.nav-marker) {
-        background: linear-gradient(135deg, #6366f1, #8b5cf6);
-        padding: 10px;
-        border-radius: 14px;
-        margin-bottom: 16px;
-    }
-    </style>
-    """, unsafe_allow_html=True)
+    cols = st.columns([2,6])
 
-    with st.container():
-        st.markdown('<div class="nav-marker"></div>', unsafe_allow_html=True)
+    with cols[0]:
+        st.markdown(
+            '<div style="font-weight:700;font-size:20px;"><span style="color:#fbbf24;">Steps</span></div>',
+            unsafe_allow_html=True
+        )
 
-        cols = st.columns([2,6])
+    with cols[1]:
+        nav_cols = st.columns(len(pages))
 
-        with cols[0]:
-            st.markdown(
-                '<div style="font-weight:700;font-size:20px;color:white;"><span style="color:#fbbf24;">Steps</span></div>',
-                unsafe_allow_html=True
-            )
+        for i, p in enumerate(pages):
+            if nav_cols[i].button(
+                p,
+                use_container_width=True,
+                type="primary" if st.session_state.page == p else "secondary"
+            ):
+                st.session_state.page = p
+                st.rerun()
 
-        with cols[1]:
-            nav_cols = st.columns(len(pages))
-
-            for i, p in enumerate(pages):
-                if nav_cols[i].button(
-                    p,
-                    use_container_width=True,
-                    type="primary" if st.session_state.page == p else "secondary"
-                ):
-                    st.session_state.page = p
-                    st.rerun()
+    st.markdown("---")
     
 render_navbar()
 page = st.session_state.page
@@ -2063,8 +2051,8 @@ league_events = build_league_events(base_df, league_history)
 
     
 top_container = st.container()
-with top_container:
-        show_global_league_moments (league_events)
+#with top_container:
+#        show_global_league_moments (league_events)
 # =========================
 # 📍 NAVIGATION (STABLE FIX)
 # =========================
