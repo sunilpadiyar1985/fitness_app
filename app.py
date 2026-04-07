@@ -188,6 +188,11 @@ body {
     }
 }
 
+.block-container > div:first-child {
+    margin-top: 0px !important;
+    padding-top: 0px !important;
+}
+
 /* =========================
    BUTTONS (NAV PILLS FIX)
 ========================= */
