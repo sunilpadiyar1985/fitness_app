@@ -26,7 +26,8 @@ def render_navbar():
         "Leaderboard",
         "League",
         "Players",
-
+        "Stats",
+        "Badges",
         "History"
     ]
 
@@ -43,12 +44,12 @@ def render_navbar():
 
     # NAV BUTTONS
     with cols[1]:
-        nav_cols = st.columns(len(pages))
+        nav_cols = st.columns([1.2]*len(pages))
 
         for i, p in enumerate(pages):
             if nav_cols[i].button(
                 p,
-                use_container_width=True,  # ✅ IMPORTANT
+                use_container_width=False,
                 type="primary" if st.session_state.page == p else "secondary"
             ):
                 st.session_state.page = p
@@ -192,13 +193,13 @@ body {
    NAVBAR CONTAINER (GRADIENT BACK)
 ========================= */
 .navbar-container {
-    padding: 8px 12px;
-    border-radius: 12px;
-    margin-bottom: 10px;
+    padding: 10px 14px;
+    border-radius: 14px;
+    margin-bottom: 12px;
 
     background: linear-gradient(135deg, #eef2ff, #e0e7ff);
 
-    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.08);
 }
 
 @media (prefers-color-scheme: dark) {
