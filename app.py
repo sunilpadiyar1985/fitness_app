@@ -28,50 +28,48 @@ if "page" not in st.session_state:
     
 def render_navbar():
 
-    pages = [
-        "Dashboard",
-        "Leaderboard",
-        "League",
-        "Players",
-        "Stats"
-    ]
+    pages = ["Dashboard", "Leaderboard", "League", "Players", "Stats"]
 
-    # NAVBAR WRAPPER (SAFE)
+    # Navbar styling (SAFE)
     st.markdown("""
-    <div style="
+    <style>
+    .navbar-container {
         background: linear-gradient(135deg, #6366f1, #8b5cf6);
-        position: relative;
-        z-index: 1000;
-        padding: 12px 16px;
+        padding: 10px;
         border-radius: 14px;
         margin-bottom: 16px;
-        box-shadow: 0 10px 30px rgba(99,102,241,0.35);
-    ">
+    }
+    </style>
     """, unsafe_allow_html=True)
 
-    cols = st.columns([2,6])
+    # IMPORTANT: use container instead of raw div wrapping
+    with st.container():
 
-    # LOGO
-    with cols[0]:
-        st.markdown(
-            '<div style="font-weight:700;font-size:20px;color:white;"><span style="color:#fbbf24;">Steps</span></div>',
-            unsafe_allow_html=True
-        )
+        st.markdown('<div class="navbar-container">', unsafe_allow_html=True)
 
-    # NAV BUTTONS
-    with cols[1]:
-        nav_cols = st.columns(len(pages))
+        cols = st.columns([2,6])
 
-        for i, p in enumerate(pages):
-            if nav_cols[i].button(
-                p,
-                use_container_width=True,
-                type="primary" if st.session_state.page == p else "secondary"
-            ):
-                st.session_state.page = p
-                st.rerun()
+        # LOGO
+        with cols[0]:
+            st.markdown(
+                '<div style="font-weight:700;font-size:20px;color:white;"><span style="color:#fbbf24;">Steps</span></div>',
+                unsafe_allow_html=True
+            )
 
-    st.markdown("</div>", unsafe_allow_html=True)
+        # BUTTONS
+        with cols[1]:
+            nav_cols = st.columns(len(pages))
+
+            for i, p in enumerate(pages):
+                if nav_cols[i].button(
+                    p,
+                    use_container_width=True,
+                    type="primary" if st.session_state.page == p else "secondary"
+                ):
+                    st.session_state.page = p
+                    st.rerun()
+
+        st.markdown('</div>', unsafe_allow_html=True)
     
 render_navbar()
 page = st.session_state.page
