@@ -66,7 +66,7 @@ def render_navbar():
 render_navbar()
 page = st.session_state.page
 
-st.set_page_config(page_title="Steps League – Monthly Results", page_icon="🏃", layout="wide", )
+st.set_page_config(page_title="Steps League – Monthly Results", page_icon="🏃", layout="centered", )
 if not st.session_state.get("is_admin", False):
     st.markdown("""
     <style>
