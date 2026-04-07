@@ -55,6 +55,7 @@ def render_navbar():
                 if p == "🔄 Refresh":
                     st.cache_data.clear()
                     st.cache_resource.clear()
+                    st.session_state.clear()
                     st.rerun()
                 else:
                     st.session_state.page = p
@@ -1177,6 +1178,7 @@ def build_all_user_streaks(df):
 raw_df = load_data_supabase()
 all_streaks = build_all_user_streaks(raw_df)
 st.sidebar.caption(f"📦 Rows loaded: {len(raw_df):,}")
+st.sidebar.write("Max date:", raw_df["date"].max())
 last_sync = raw_df["date"].max()
 st.sidebar.caption(f"🕒 Last data date: {last_sync.date()}")
 raw_df = raw_df.sort_values(["User", "date"]).reset_index(drop=True)
