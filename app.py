@@ -167,27 +167,6 @@ body {
     padding-right: 1rem !important;
 }
 
-/* =========================
-   NAVBAR CONTAINER (GRADIENT BACK)
-========================= */
-.navbar-container {
-    padding: 10px 14px;
-    border-radius: 14px;
-    margin: 10px 0 10px 0;
-
-    #background: linear-gradient(135deg, #6366f1, #8b5cf6);  /* 🔥 STRONG gradient */
-
-    color: white;
-
-    box-shadow: 0 10px 30px rgba(99,102,241,0.35);
-}
-
-@media (prefers-color-scheme: dark) {
-    .navbar-container {
-        background: linear-gradient(135deg, #1e293b, #020617);
-    }
-}
-
 
 /* Kill top spacing for first widget */
 .block-container .stSelectbox:first-of-type {
