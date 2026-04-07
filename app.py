@@ -173,7 +173,7 @@ body {
 .navbar-container {
     padding: 10px 14px;
     border-radius: 14px;
-    margin: 10px 0 6px 0;
+    margin: 10px 0 10px 0;
 
     background: linear-gradient(135deg, #6366f1, #8b5cf6);  /* 🔥 STRONG gradient */
 
