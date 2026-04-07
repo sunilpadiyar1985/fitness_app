@@ -2173,16 +2173,11 @@ with st.sidebar.expander("🧰 User tools", expanded=False):
 st.markdown("""
 </div>
 """, unsafe_allow_html=True)
-# Spacer to prevent overlap
-st.markdown("<div style='height: 8px'></div>", unsafe_allow_html=True)
 
 # =========================================================
 # 🏆 HALL OF FAME — ALL TIME RECORDS
 # =========================================================
 if page == "Hall of Fame":
-
-    st.markdown("#### 🏆 Hall of Fame — All Time Records")
-    st.caption("Since the inception of the Steps League")
 
     # -------------------------
     # PODIUM HEADER
