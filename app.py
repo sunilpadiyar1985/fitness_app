@@ -22,12 +22,12 @@ if "page" not in st.session_state:
 def render_navbar():
 
     pages = [
-        "🏠 Monthly Results",
-        "👤 Player Profile",
-        "🏆 Hall of Fame",
-        "📜 League History",
-        "🎁 Wrapped",
-        "ℹ️ Readme: Our Dashboard"
+        "Monthly Results",
+        "Player Profile",
+        "Hall of Fame",
+        "League History",
+        "Wrapped",
+        "Readme"
     ]
 
     st.markdown('<div class="navbar-container">', unsafe_allow_html=True)
@@ -2069,18 +2069,6 @@ league_events = build_league_events(base_df, league_history)
 top_container = st.container()
 with top_container:
         show_global_league_moments (league_events)
-# =========================
-# 📍 NAVIGATION (STABLE FIX)
-# =========================
-
-pages = [
-    "🏠 Monthly Results",
-    "👤 Player Profile",
-    "🏆 Hall of Fame",
-    "📜 League History",
-    "🎁 Wrapped",
-    "ℹ️ Readme: Our Dashboard"
-]
 
 # -------------------------
 # STATE INIT
@@ -2418,9 +2406,8 @@ if page == "🏆 Hall of Fame":
     )
 
 
-if page == "🏠 Monthly Results":
+if page == "Monthly Results":
     
-    st.markdown("#### 🏃 Monthly Results")
     current_month = pd.Timestamp.today().to_period("M")
     
     # ----------------------------
@@ -2946,9 +2933,7 @@ if page == "🏠 Monthly Results":
 # =========================================================
 # 👤 PLAYER PROFILE PAGE
 # =========================================================
-if page == "👤 Player Profile":
-
-    st.markdown("#### 👤 Player Profile")
+if page == "Player Profile":
 
     users = sorted(df["User"].unique())
     display_map = {name_with_status(u): u for u in users}
@@ -3401,9 +3386,8 @@ assert base_df["date"].dt.to_period("M").nunique() > 1, \
 # =========================================================
 
 
-if page == "📜 League History":
+if page == "League History":
     
-    st.markdown("#### 📜 League History")
     st.caption("The official record book of the Steps League")
 
     lh = league_history.copy()
@@ -3746,7 +3730,7 @@ if page == "📜 League History":
 # =========================================================
 # Wrapped
 # =========================================================
-if page == "🎁 Wrapped":
+if page == "Wrapped":
     available_years = sorted(
         df["date"].dt.year.unique()
     )
@@ -3763,9 +3747,7 @@ if page == "🎁 Wrapped":
 # =========================================================
 # ℹ️ ABOUT — STEPS LEAGUE README
 # =========================================================
-if page == "ℹ️ Readme: Our Dashboard":
-
-    st.markdown("#### ℹ️ About the Steps League")
+if page == "Readme":
 
     st.markdown("""
 Move more. Stay consistent. Make fitness a game.
