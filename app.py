@@ -193,6 +193,11 @@ body {
     padding-top: 0px !important;
 }
 
+/* Kill top spacing for first widget */
+.block-container .stSelectbox:first-of-type {
+    margin-top: -10px !important;
+}
+
 /* =========================
    BUTTONS (NAV PILLS FIX)
 ========================= */
