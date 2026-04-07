@@ -30,10 +30,9 @@ def render_navbar():
 
     pages = ["Dashboard", "Leaderboard", "League", "Players", "Stats"]
 
-    # Navbar styling (SAFE)
     st.markdown("""
     <style>
-    .navbar-container {
+    section[data-testid="stVerticalBlock"] > div:has(.nav-marker) {
         background: linear-gradient(135deg, #6366f1, #8b5cf6);
         padding: 10px;
         border-radius: 14px;
@@ -42,21 +41,17 @@ def render_navbar():
     </style>
     """, unsafe_allow_html=True)
 
-    # IMPORTANT: use container instead of raw div wrapping
     with st.container():
-
-        st.markdown('<div class="navbar-container">', unsafe_allow_html=True)
+        st.markdown('<div class="nav-marker"></div>', unsafe_allow_html=True)
 
         cols = st.columns([2,6])
 
-        # LOGO
         with cols[0]:
             st.markdown(
                 '<div style="font-weight:700;font-size:20px;color:white;"><span style="color:#fbbf24;">Steps</span></div>',
                 unsafe_allow_html=True
             )
 
-        # BUTTONS
         with cols[1]:
             nav_cols = st.columns(len(pages))
 
@@ -68,8 +63,6 @@ def render_navbar():
                 ):
                     st.session_state.page = p
                     st.rerun()
-
-        st.markdown('</div>', unsafe_allow_html=True)
     
 render_navbar()
 page = st.session_state.page
