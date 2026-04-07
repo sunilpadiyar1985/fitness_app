@@ -26,8 +26,7 @@ def render_navbar():
         "Leaderboard",
         "League",
         "Players",
-        "Stats",
-        "Badges",
+
         "History"
     ]
 
@@ -44,12 +43,12 @@ def render_navbar():
 
     # NAV BUTTONS
     with cols[1]:
-        nav_cols = st.columns([1.2]*len(pages))
+        nav_cols = st.columns(len(pages))
 
         for i, p in enumerate(pages):
             if nav_cols[i].button(
                 p,
-                use_container_width=False,
+                use_container_width=True,  # ✅ IMPORTANT
                 type="primary" if st.session_state.page == p else "secondary"
             ):
                 st.session_state.page = p
@@ -195,11 +194,13 @@ body {
 .navbar-container {
     padding: 10px 14px;
     border-radius: 14px;
-    margin-bottom: 12px;
+    margin: 10px 0 16px 0;
 
-    background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);  /* 🔥 STRONG gradient */
 
-    box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+    color: white;
+
+    box-shadow: 0 10px 30px rgba(99,102,241,0.35);
 }
 
 @media (prefers-color-scheme: dark) {
