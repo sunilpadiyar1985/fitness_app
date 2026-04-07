@@ -7,12 +7,6 @@ import plotly.express as px
 import numpy as np
 import requests
 
-st.set_page_config(
-    page_title="Steps League – Monthly Results",
-    page_icon="🏃",
-    layout="wide",
-)
-
 # load env variables
 load_dotenv()
 
@@ -22,41 +16,58 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 # connect
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-
 if "page" not in st.session_state:
     st.session_state.page = "Dashboard"
     
 def render_navbar():
 
-    pages = ["Dashboard", "Leaderboard", "League", "Players", "Stats"]
+    pages = [
+        "Dashboard",
+        "Leaderboard",
+        "League",
+        "Players",
 
-    cols = st.columns([2,6])
+        "History"
+    ]
 
+    st.markdown('<div class="navbar-container">', unsafe_allow_html=True)
+
+    cols = st.columns([2,6,2])  # ✅ THIS WAS MISSING
+
+    # LOGO
     with cols[0]:
         st.markdown(
-            '<div style="font-weight:700;font-size:20px;"><span style="color:#fbbf24;">Steps</span></div>',
+            '<div class="nav-logo"><span>Steps</span> League</div>',
             unsafe_allow_html=True
         )
 
+    # NAV BUTTONS
     with cols[1]:
         nav_cols = st.columns(len(pages))
 
         for i, p in enumerate(pages):
             if nav_cols[i].button(
                 p,
-                use_container_width=True,
+                use_container_width=True,  # ✅ IMPORTANT
                 type="primary" if st.session_state.page == p else "secondary"
             ):
                 st.session_state.page = p
                 st.rerun()
 
-    st.markdown("---")
+    # RIGHT SIDE
+    #with cols[2]:
+    #    st.markdown(
+    #        '<div class="nav-points">🏆 League</div>',
+    #        unsafe_allow_html=True
+    #    )
+
+    st.markdown('</div>', unsafe_allow_html=True)
     
 render_navbar()
 page = st.session_state.page
 
 if page == "Dashboard":
-   st.info("Dashboard coming soon")
+    pass  # 👈 keep your existing code running
 
 elif page == "Leaderboard":
     st.info("Leaderboard coming soon")
@@ -76,14 +87,16 @@ elif page == "Badges":
 elif page == "History":
     st.info("History coming soon")
 
-
+st.set_page_config(page_title="Steps League – Monthly Results", page_icon="🏃", layout="wide", )
 if not st.session_state.get("is_admin", False):
     st.markdown("""
     <style>
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
+    header {visibility: hidden;}
     </style>
     """, unsafe_allow_html=True)
+
 # ======================================
 # 🚧 MAINTENANCE + ADMIN ACCESS GATE
 # ======================================
@@ -91,7 +104,7 @@ if not st.session_state.get("is_admin", False):
 MAINTENANCE_MODE = False   # ← switch ON / OFF
 
 def maintenance_gate():
-    #st.set_page_config(page_title="Steps League – Maintenance", page_icon="🚧", layout="centered")
+    st.set_page_config(page_title="Steps League – Maintenance", page_icon="🚧", layout="centered")
 
     st.markdown("""
     <div style="text-align:center; padding:40px;">
@@ -146,8 +159,11 @@ st.markdown("""
 /* =========================
    HIDE STREAMLIT DEFAULT UI
 ========================= */
-#MainMenu {visibility: hidden;}
-footer {visibility: hidden;}
+#MainMenu, footer, header {
+    visibility: hidden;
+}
+header { display: none !important; }
+button[kind="header"] { display: none !important; }
 
 /* =========================
    GLOBAL
@@ -171,37 +187,49 @@ body {
     padding-left: 1rem !important;
     padding-right: 1rem !important;
 }
+
 /* =========================
-   BUTTONS (NAV PILLS)
+   NAVBAR CONTAINER (GRADIENT BACK)
+========================= */
+.navbar-container {
+    padding: 10px 14px;
+    border-radius: 14px;
+    margin: 10px 0 16px 0;
+
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);  /* 🔥 STRONG gradient */
+
+    color: white;
+
+    box-shadow: 0 10px 30px rgba(99,102,241,0.35);
+}
+
+@media (prefers-color-scheme: dark) {
+    .navbar-container {
+        background: linear-gradient(135deg, #1e293b, #020617);
+    }
+}
+
+/* =========================
+   BUTTONS (NAV PILLS FIX)
 ========================= */
 div.stButton > button {
     border-radius: 999px;
     font-weight: 500;
     height: 36px;
+
+    white-space: nowrap !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
     font-size: 13px;
-    padding: 6px 12px;
-
-    color: #111;  /* 👈 DARK text for light mode */
+    padding: 6px 10px;
 }
 
-@media (prefers-color-scheme: dark) {
-    div.stButton > button {
-        color: white;
-    }
-}
-
-/* ACTIVE TAB */
+/* ACTIVE BUTTON */
 div.stButton > button[kind="primary"] {
-    background: rgba(255,255,255,0.25) !important;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
     color: white !important;
     border: none !important;
-}
-
-/* INACTIVE TAB */
-div.stButton > button[kind="secondary"] {
-    background: rgba(255,255,255,0.15);
-    color: white;
-    border: none;
 }
 
 /* =========================
@@ -210,17 +238,26 @@ div.stButton > button[kind="secondary"] {
 .nav-logo {
     font-size: 20px;
     font-weight: 700;
-    color: #111;
 }
 
 .nav-logo span {
-    color: #fbbf24;
+    color: #f59e0b;
 }
 
-@media (prefers-color-scheme: dark) {
-    .nav-logo {
-        color: white;
-    }
+/* =========================
+   RIGHT BADGE
+========================= */
+.nav-points {
+    background: linear-gradient(135deg, #f59e0b, #f97316);
+    color: black;
+
+    padding: 6px 10px;
+    border-radius: 999px;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    display: inline-block;
 }
 
 /* =========================
@@ -2051,8 +2088,8 @@ league_events = build_league_events(base_df, league_history)
 
     
 top_container = st.container()
-#with top_container:
-#        show_global_league_moments (league_events)
+with top_container:
+        show_global_league_moments (league_events)
 # =========================
 # 📍 NAVIGATION (STABLE FIX)
 # =========================
