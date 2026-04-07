@@ -2395,536 +2395,538 @@ if page == "Hall of Fame":
                 use_container_width=True,
                 hide_index=True
             )
+
+# =========================================================
+# 👤 MONTHLY RESULT PAGE
+# =========================================================
+if page == "Monthly Results":
+    content = st.container()
+    
+    with content:
+        left, center, right = st.columns([1, 6, 1])
+    
+        with center:
+    
+            current_month = pd.Timestamp.today().to_period("M")
+            
+            # ----------------------------
+            # MONTH SELECTOR (ONLY REAL MONTHS, LAST 6)
+            # ----------------------------
+            month_totals = (
+                df.groupby("MonthP")["steps"]
+                  .sum()
+                  .reset_index()
+            )
+            
+            real_months = month_totals[month_totals["steps"] > 0]["MonthP"].sort_values().unique()
+            available_months = list(real_months[-6:])
+            
+            if not available_months:
+                st.warning("No data available yet.")
+                st.stop()
+            
+            selected_month = st.selectbox(
+                "Select month",
+                available_months[::-1],
+                format_func=lambda x: x.strftime("%B %Y")
+            )
         
-        if page == "Monthly Results":
+            is_current_month = (selected_month == current_month)
+            month_start = selected_month.to_timestamp()
+            month_end = selected_month.to_timestamp("M")
+            
+            active_users = roster_df[
+                (roster_df["Active from"] <= month_end) &
+                ((roster_df["Active till"].isna()) | (roster_df["Active till"] >= month_start))
+            ]["User"].unique().tolist()
         
-            content = st.container()
+            month_lh = league_history[
+                (league_history["Month"].dt.to_period("M") == selected_month) &
+                (league_history["User"].isin(active_users))
+            ]
             
-            with content:
-                left, center, right = st.columns([1, 6, 1])
+            month_df = df[
+                (df["MonthP"] == selected_month) &
+                (df["User"].isin(active_users))
+            ]
             
-                with center:
+            if month_df["steps"].sum() == 0:
+                st.info("📭 Data not available yet for this month.\n\nPlease check back later or contact the admin 🙂")
+                st.stop()
             
-                    current_month = pd.Timestamp.today().to_period("M")
-                    
-                    # ----------------------------
-                    # MONTH SELECTOR (ONLY REAL MONTHS, LAST 6)
-                    # ----------------------------
-                    month_totals = (
-                        df.groupby("MonthP")["steps"]
-                          .sum()
-                          .reset_index()
+            # ----------------------------
+            # AGGREGATE
+            # ----------------------------
+            monthly_totals = (
+                month_df.groupby("User")["steps"]
+                .sum()
+                .reset_index()
+                .sort_values("steps", ascending=False)
+                .reset_index(drop=True)
+            )
+            
+            monthly_totals.insert(0, "Rank", range(1, len(monthly_totals) + 1))
+            
+            st.markdown(f"##### Results for {selected_month.strftime('%B %Y')} ⭐")
+            if is_current_month:
+                st.info("🕒 **Live month in progress** — standings are based on current data and may change before month end.")
+        
+                
+            # ----------------------------
+            # 🚨 League moments (NEW)
+            # ----------------------------
+            
+            records = detect_all_time_records(df)
+            breaking = recent_record_breaks(records, selected_month)
+            
+            if not breaking.empty:
+                st.markdown("## 🚨 League moments")
+            
+                for _, r in breaking.iterrows():
+                    st.error(
+                        f"🔥 **NEW RECORD!** {r['title']} — "
+                        f"{name_with_status(r['User'])} with {r['value']:,}"
                     )
-                    
-                    real_months = month_totals[month_totals["steps"] > 0]["MonthP"].sort_values().unique()
-                    available_months = list(real_months[-6:])
-                    
-                    if not available_months:
-                        st.warning("No data available yet.")
-                        st.stop()
-                    
-                    selected_month = st.selectbox(
-                        "Select month",
-                        available_months[::-1],
-                        format_func=lambda x: x.strftime("%B %Y")
-                    )
+        
+            if is_current_month:
+                crown_text = "🗳️ Current leader"
+            else:
+                crown_text = "👑 Champion of the month"
+            # ----------------------------
+            # PODIUM
+            # ----------------------------
+            if len(monthly_totals) < 3:
+                st.warning("Not enough active players this month to build a podium.")
+                st.stop()
                 
-                    is_current_month = (selected_month == current_month)
-                    month_start = selected_month.to_timestamp()
-                    month_end = selected_month.to_timestamp("M")
-                    
-                    active_users = roster_df[
-                        (roster_df["Active from"] <= month_end) &
-                        ((roster_df["Active till"].isna()) | (roster_df["Active till"] >= month_start))
-                    ]["User"].unique().tolist()
+            top3 = monthly_totals.head(3).reset_index(drop=True)
+            
+            st.markdown("###### 🏆 This month's podium" if not is_current_month else "###### 🏁 Current standings")
+            p1, p2, p3 = st.columns([1.1, 1.4, 1.1])
+            
+            # 🥈 SECOND
+            with p1:
+                st.markdown(
+                    f"""
+                    <div style="background:#F4F6F8;padding:16px;border-radius:16px;text-align:center">
+                        <div style="font-size:18px">🥈 Second</div>
+                        <div style="font-size:20px;font-weight:600;margin-top:6px">{name_with_status(top3.loc[1,'User'])}</div>
+                        <div style="font-size:15px;color:#555">{int(top3.loc[1,'steps']):,} steps</div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+            
+            # 🥇 FIRST
+            with p2:
+                st.markdown(
+                    f"""
+                    <div style="background:#FFF7D6;padding:20px;border-radius:20px;text-align:center">
+                        <div style="font-size:20px">🥇 Winner</div>
+                        <div style="font-size:24px;font-weight:700;margin-top:6px">{name_with_status(top3.loc[0,'User'])}</div>
+                        <div style="font-size:17px;color:#444">{int(top3.loc[0,'steps']):,} steps</div>
+                        <div style="font-size:13px;color:#777;margin-top:4px">{crown_text}</div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+            
+            # 🥉 THIRD
+            with p3:
+                st.markdown(
+                    f"""
+                    <div style="background:#FBF1E6;padding:16px;border-radius:16px;text-align:center">
+                        <div style="font-size:18px">🥉 Third</div>
+                        <div style="font-size:20px;font-weight:600;margin-top:6px">{name_with_status(top3.loc[2,'User'])}</div>
+                        <div style="font-size:15px;color:#555">{int(top3.loc[2,'steps']):,} steps</div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+            
+            # ----------------------------
+            # MONTHLY HIGHLIGHTS
+            # ----------------------------
+            monthly_records = monthly_top_records(df, selected_month)
+            st.divider()
+            st.markdown("###### 🎖️ This month's highlights")
+            
+            daily = month_df.copy()
+            daily["day"] = daily["date"].dt.day
+            
+            pivot_daily = daily.pivot_table(
+                index="User",
+                columns="day",
+                values="steps",
+                aggfunc="sum"
+            ).fillna(0)
+        
+            # -----------------------------------
+            # FILTER ONLY ACTIVE (NON-ZERO) USERS
+            # -----------------------------------
+            user_totals = pivot_daily.sum(axis=1)
+            active_users = user_totals[user_totals > 0].index
+            
+            pivot_active = pivot_daily.loc[active_users]
+            
+            if pivot_active.empty:
+                st.info("No activity recorded yet for this month.")
+                st.stop()
+            # ----------------------------
+            # SAFE INITIALIZATION (important for Streamlit reruns)
+            # ----------------------------
+            top_consistent = pd.Series(dtype=float)
+            top_active = pd.Series(dtype=float)
+            top_10k = pd.Series(dtype=int)
+            top_5k = pd.Series(dtype=int)
+            top_improved = pd.Series(dtype=float)
+        
+            # ----------------------------
+            # MONTHLY HIGHLIGHTS (CLEAN)
+            # ----------------------------
+            std_dev = pivot_active.std(axis=1).sort_values()
+            top_consistent = std_dev.head(3)
+            
+            avg_steps = pivot_active.mean(axis=1).sort_values(ascending=False)
+            top_active = avg_steps.head(3)
+            
+            days_10k = (pivot_active >= 10000).sum(axis=1).sort_values(ascending=False)
+            top_10k = days_10k.head(3)
+            
+            days_5k = ((pivot_active >= 5000) & (pivot_active < 10000)).sum(axis=1).sort_values(ascending=False)
+            top_5k = days_5k.head(3)
+            
+            def slope(row):
+                y = row.values
+                x = np.arange(len(y))
+                if np.all(y == 0):
+                    return 0
+                return np.polyfit(x, y, 1)[0]
+            
+            slopes = pivot_active.apply(slope, axis=1).sort_values(ascending=False)
+            top_improved = slopes.head(3)
+        
+            td = monthly_records["top_days"]
+        
+            if not td.empty:
+                crown = " 👑" if monthly_records["day_record"] else ""
+        
+            tw = monthly_records["top_weeks"]
+        
+            if not tw.empty:
+                crown = " 👑" if monthly_records["week_record"] else ""
+            
+            c1, c2 = st.columns(2)
+            
+            with c1:
                 
-                    month_lh = league_history[
-                        (league_history["Month"].dt.to_period("M") == selected_month) &
-                        (league_history["User"].isin(active_users))
-                    ]
-                    
-                    month_df = df[
-                        (df["MonthP"] == selected_month) &
-                        (df["User"].isin(active_users))
-                    ]
-                    
-                    if month_df["steps"].sum() == 0:
-                        st.info("📭 Data not available yet for this month.\n\nPlease check back later or contact the admin 🙂")
-                        st.stop()
-                    
-                    # ----------------------------
-                    # AGGREGATE
-                    # ----------------------------
-                    monthly_totals = (
-                        month_df.groupby("User")["steps"]
-                        .sum()
-                        .reset_index()
-                        .sort_values("steps", ascending=False)
-                        .reset_index(drop=True)
-                    )
-                    
-                    monthly_totals.insert(0, "Rank", range(1, len(monthly_totals) + 1))
-                    
-                    st.markdown(f"##### Results for {selected_month.strftime('%B %Y')} ⭐")
-                    if is_current_month:
-                        st.info("🕒 **Live month in progress** — standings are based on current data and may change before month end.")
+                st.success(f"""🔥 **Highest steps in a day**
                 
-                        
-                    # ----------------------------
-                    # 🚨 League moments (NEW)
-                    # ----------------------------
-                    
-                    records = detect_all_time_records(df)
-                    breaking = recent_record_breaks(records, selected_month)
-                    
-                    if not breaking.empty:
-                        st.markdown("## 🚨 League moments")
-                    
-                        for _, r in breaking.iterrows():
-                            st.error(
-                                f"🔥 **NEW RECORD!** {r['title']} — "
-                                f"{name_with_status(r['User'])} with {r['value']:,}"
-                            )
+            {td.loc[0,'User']} — {int(td.loc[0,'steps']):,}{crown}  
+            {td.loc[1,'User']} — {int(td.loc[1,'steps']):,}  
+            {td.loc[2,'User']} — {int(td.loc[2,'steps']):,}
+            """)
+        
+                st.success(f"""🗓️ **Highest steps in a week**
                 
-                    if is_current_month:
-                        crown_text = "🗳️ Current leader"
+            {tw.loc[0,'User']} — {int(tw.loc[0,'steps']):,}{crown}  
+            {tw.loc[1,'User']} — {int(tw.loc[1,'steps']):,}  
+            {tw.loc[2,'User']} — {int(tw.loc[2,'steps']):,}
+            """)
+        
+                st.info(f"""🏅 **10K crossed king / queen**
+                
+            {top_10k.index[0]} — {int(top_10k.iloc[0])} days  
+            {top_10k.index[1]} — {int(top_10k.iloc[1])} days  
+            {top_10k.index[2]} — {int(top_10k.iloc[2])} days
+            """)
+        
+                st.info(f"""🥈 **5K crossed king / queen** 
+                
+            {top_5k.index[0]} — {int(top_5k.iloc[0])} days  
+            {top_5k.index[1]} — {int(top_5k.iloc[1])} days  
+            {top_5k.index[2]} — {int(top_5k.iloc[2])} days
+            """)
+        
+            with c2:
+                st.success(f"""🎯 **Most consistent**
+                
+            {top_consistent.index[0]} — {int(top_consistent.iloc[0]):,} std dev  
+            {top_consistent.index[1]} — {int(top_consistent.iloc[1]):,}  
+            {top_consistent.index[2]} — {int(top_consistent.iloc[2]):,}
+            """)
+            
+                st.success(f"""⚡ **Highly active**
+                
+            {top_active.index[0]} — {int(top_active.iloc[0]):,} avg steps  
+            {top_active.index[1]} — {int(top_active.iloc[1]):,} 
+            {top_active.index[2]} — {int(top_active.iloc[2]):,}
+            """)
+            
+                st.success(f"""🚀 **Most improved**
+                
+            {top_improved.index[0]} — {int(top_improved.iloc[0]):,} slope  
+            {top_improved.index[1]} — {int(top_improved.iloc[1]):,} 
+            {top_improved.index[2]} — {int(top_improved.iloc[2]):,}
+            """)
+            
+            premier = month_lh[month_lh["League"] == "Premier"].sort_values("Rank")
+            championship = month_lh[month_lh["League"] == "Championship"].sort_values("Rank")
+            
+            st.divider()
+            st.markdown("###### 🏟️ League Tables")
+            
+            premier = month_lh[month_lh["League"] == "Premier"].sort_values("Rank")
+            championship = month_lh[month_lh["League"] == "Championship"].sort_values("Rank")
+            
+            c1, c2 = st.columns(2)
+            
+            with c1:
+                st.markdown("###### 🥇 Premier League")
+                st.dataframe(
+                    premier[["Rank","User","points_display","Promoted","Relegated"]]
+                        .rename(columns={
+                            "points_display": "Points",
+                            "Promoted": "⬆",
+                            "Relegated": "⬇"
+                        }),
+                    use_container_width=True,
+                    hide_index=True
+                )
+            
+            with c2:
+                st.markdown("###### 🥈 Championship")
+                st.dataframe(
+                    championship[["Rank","User","points_display","Promoted","Relegated"]]
+                        .rename(columns={
+                            "points_display": "Points",
+                            "Promoted": "⬆",
+                            "Relegated": "⬇"
+                        }),
+                    use_container_width=True,
+                    hide_index=True
+                )
+        
+            st.divider()
+            st.markdown("###### ⚠️ Danger zone")
+            
+            bottom_prem = premier.sort_values("Rank").tail(2)
+            top_champ = championship.sort_values("Rank").head(2)
+            
+            c1, c2 = st.columns(2)
+            
+            with c1:
+                st.error("🔥 Premier relegation risk")
+                for _, r in bottom_prem.iterrows():
+                    st.write(f"⬇ {r['User']} — {int(r['points_display'])} pts")
+            
+            with c2:
+                st.success("🚀 Championship promotion push")
+                for _, r in top_champ.iterrows():
+                    st.write(f"⬆ {r['User']} — {int(r['points_display'])} pts")
+        
+        
+            st.divider()
+            st.markdown("###### 📰 Monthly storylines")
+            
+            if "top_improved" in locals() and not top_improved.empty and not top_consistent.empty:
+            
+                dominator = monthly_totals.iloc[0]
+                climber = top_improved.index[0] if len(top_improved) > 0 else "—"
+                consistent = top_consistent.index[0]
+                last_place = monthly_totals.iloc[-1]["User"]
+            
+                st.success(f"👑 **Dominant force:** {dominator['User']} ruled the month with {int(dominator['steps']):,} steps")
+                st.info(f"🚀 **Biggest momentum:** {climber} showed the strongest improvement trend")
+                st.warning(f"🧱 **Mr Consistent:** {consistent} was the steadiest performer this month")
+                st.error(f"⚠️ **Needs a comeback:** {last_place} will be hungry next month")
+            
+            else:
+                st.caption("Monthly storylines will appear once enough activity data is available.")
+                
+            # ----------------------------
+            # Daily steps trend (this month)
+            # ----------------------------
+            
+            st.markdown("###### 📈 Daily steps trend (this month)")
+            # Rank users by monthly total
+            user_totals = (
+                month_df.groupby("User")["steps"]
+                .sum()
+                .sort_values(ascending=False)
+            )
+            
+            top_users = user_totals.head(5).index.tolist()
+            mode = st.radio(
+                "View mode",
+                ["Top 5 players", "Custom selection"],
+                horizontal=True
+            )
+            
+            # Selector
+            selected_users = st.multiselect(
+                "Select players to display",
+                options=user_totals.index.tolist(),
+                default=top_users,
+                help="Default shows top performers. Select up to a few players for comparison."
+            )
+        
+            # Prepare daily data
+            daily_trend = month_df.copy()
+            daily_trend["day"] = daily_trend["date"].dt.day
+            
+            # Optional: only users who actually walked this month
+            active_month_users = (
+                daily_trend.groupby("User")["steps"]
+                .sum()
+                .loc[lambda x: x > 0]
+                .index
+            )
+            
+            daily_trend = daily_trend[
+                daily_trend["User"].isin(active_month_users)
+            ]
+            daily_trend = month_df.copy()
+            daily_trend["day"] = daily_trend["date"].dt.day
+            
+            daily_trend = daily_trend[
+                daily_trend["User"].isin(selected_users)
+            ]
+        
+            fig_daily = px.line(
+            daily_trend,
+            x="day",
+            y="steps",
+            color="User",
+            markers=False
+            )
+            
+            fig_daily.update_layout(
+                height=420,
+                xaxis_title="Day of month",
+                yaxis_title="Steps",
+                hovermode="x unified",
+                legend_title="Player"
+            )
+        
+            # Line chart
+            fig_daily = px.line(
+                daily_trend,
+                x="day",
+                y="steps",
+                color="User",
+                markers=False
+            )
+            
+            fig_daily.update_layout(
+                height=420,
+                xaxis_title="Day of month",
+                yaxis_title="Steps",
+                legend_title="Player",
+                hovermode="x unified"
+            )
+        
+            daily_trend["rolling"] = (
+                daily_trend
+                .groupby("User")["steps"]
+                .rolling(3)
+                .mean()
+                .reset_index(level=0, drop=True)
+            )
+            mode = st.radio("View", ["Daily", "3-day average"], horizontal=True)
+            y_col = "rolling" if mode == "3-day average" else "steps"
+            st.plotly_chart(fig_daily, use_container_width=True)
+        
+            # ----------------------------
+            # LEADERBOARD
+            # ----------------------------
+            st.divider()
+            st.markdown("###### 📊 Monthly leaderboard")
+            
+            fig = px.bar(
+                monthly_totals,
+                x="User",
+                y="steps",
+                text="steps"
+            )
+            
+            fig.update_traces(texttemplate='%{text:,}', textposition='outside')
+            fig.update_layout(
+                xaxis_title="",
+                yaxis_title="Steps",
+                xaxis={'categoryorder': 'total descending'},
+                height=500
+            )
+            
+            st.plotly_chart(fig, use_container_width=True)
+            #st.dataframe(monthly_totals, use_container_width=True, hide_index=True)
+        
+            if month_df["steps"].sum() == 0:
+                st.info("📭 Data not available yet for this month.")
+                st.stop()
+        
+            # =========================================================
+            # 🏟️ TEAM MONTH SNAPSHOT (EMBEDDED DELTAS)
+            # =========================================================
+            
+            current_stats = team_month_stats(df, selected_month, active_users)
+            prev_month = selected_month - 1
+            prev_stats = team_month_stats(df, prev_month, active_users)
+            
+            st.divider()
+            st.markdown("##### 🏟️ Team month snapshot")
+            
+            if current_stats:
+            
+                # ----------- safe defaults -----------
+                step_delta = None
+                avg_delta = None
+            
+                if prev_stats and prev_stats["total_steps"] > 0 and prev_stats["team_avg"] > 0:
+                    step_delta = ((current_stats["total_steps"] - prev_stats["total_steps"]) / prev_stats["total_steps"]) * 100
+                    avg_delta = ((current_stats["team_avg"] - prev_stats["team_avg"]) / prev_stats["team_avg"]) * 100
+            
+                c1, c2, c3 = st.columns(3)
+            
+                # 👣 TEAM STEPS
+                c1.metric(
+                    "👣 Team steps",
+                    f"{current_stats['total_steps']:,}",
+                    delta=f"{step_delta:+.1f}%" if step_delta is not None else None,
+                    delta_color="normal"   # green up, red down (what you want)
+                )
+            
+                # 👥 ACTIVE PLAYERS
+                c2.metric(
+                    "👥 Active players",
+                    current_stats["players"]
+                )
+            
+                # 📊 TEAM DAILY AVERAGE
+                c3.metric(
+                    "📊 Team daily average",
+                    f"{current_stats['team_avg']:,}",
+                    delta=f"{avg_delta:+.1f}%" if avg_delta is not None else None,
+                    delta_color="normal"
+                )
+            
+                # ----------- Team form line -----------
+                if step_delta is not None:
+                    if step_delta > 10:
+                        form = "🔥 The league is on fire this month!"
+                    elif step_delta > 3:
+                        form = "🚀 Strong team momentum building"
+                    elif step_delta < -10:
+                        form = "🥶 Tough month for the league"
+                    elif step_delta < -3:
+                        form = "⚠️ Slight team slowdown"
                     else:
-                        crown_text = "👑 Champion of the month"
-                    # ----------------------------
-                    # PODIUM
-                    # ----------------------------
-                    if len(monthly_totals) < 3:
-                        st.warning("Not enough active players this month to build a podium.")
-                        st.stop()
-                        
-                    top3 = monthly_totals.head(3).reset_index(drop=True)
-                    
-                    st.markdown("###### 🏆 This month's podium" if not is_current_month else "###### 🏁 Current standings")
-                    p1, p2, p3 = st.columns([1.1, 1.4, 1.1])
-                    
-                    # 🥈 SECOND
-                    with p1:
-                        st.markdown(
-                            f"""
-                            <div style="background:#F4F6F8;padding:16px;border-radius:16px;text-align:center">
-                                <div style="font-size:18px">🥈 Second</div>
-                                <div style="font-size:20px;font-weight:600;margin-top:6px">{name_with_status(top3.loc[1,'User'])}</div>
-                                <div style="font-size:15px;color:#555">{int(top3.loc[1,'steps']):,} steps</div>
-                            </div>
-                            """,
-                            unsafe_allow_html=True
-                        )
-                    
-                    # 🥇 FIRST
-                    with p2:
-                        st.markdown(
-                            f"""
-                            <div style="background:#FFF7D6;padding:20px;border-radius:20px;text-align:center">
-                                <div style="font-size:20px">🥇 Winner</div>
-                                <div style="font-size:24px;font-weight:700;margin-top:6px">{name_with_status(top3.loc[0,'User'])}</div>
-                                <div style="font-size:17px;color:#444">{int(top3.loc[0,'steps']):,} steps</div>
-                                <div style="font-size:13px;color:#777;margin-top:4px">{crown_text}</div>
-                            </div>
-                            """,
-                            unsafe_allow_html=True
-                        )
-                    
-                    # 🥉 THIRD
-                    with p3:
-                        st.markdown(
-                            f"""
-                            <div style="background:#FBF1E6;padding:16px;border-radius:16px;text-align:center">
-                                <div style="font-size:18px">🥉 Third</div>
-                                <div style="font-size:20px;font-weight:600;margin-top:6px">{name_with_status(top3.loc[2,'User'])}</div>
-                                <div style="font-size:15px;color:#555">{int(top3.loc[2,'steps']):,} steps</div>
-                            </div>
-                            """,
-                            unsafe_allow_html=True
-                        )
-                    
-                    # ----------------------------
-                    # MONTHLY HIGHLIGHTS
-                    # ----------------------------
-                    monthly_records = monthly_top_records(df, selected_month)
-                    st.divider()
-                    st.markdown("###### 🎖️ This month's highlights")
-                    
-                    daily = month_df.copy()
-                    daily["day"] = daily["date"].dt.day
-                    
-                    pivot_daily = daily.pivot_table(
-                        index="User",
-                        columns="day",
-                        values="steps",
-                        aggfunc="sum"
-                    ).fillna(0)
-                
-                    # -----------------------------------
-                    # FILTER ONLY ACTIVE (NON-ZERO) USERS
-                    # -----------------------------------
-                    user_totals = pivot_daily.sum(axis=1)
-                    active_users = user_totals[user_totals > 0].index
-                    
-                    pivot_active = pivot_daily.loc[active_users]
-                    
-                    if pivot_active.empty:
-                        st.info("No activity recorded yet for this month.")
-                        st.stop()
-                    # ----------------------------
-                    # SAFE INITIALIZATION (important for Streamlit reruns)
-                    # ----------------------------
-                    top_consistent = pd.Series(dtype=float)
-                    top_active = pd.Series(dtype=float)
-                    top_10k = pd.Series(dtype=int)
-                    top_5k = pd.Series(dtype=int)
-                    top_improved = pd.Series(dtype=float)
-                
-                    # ----------------------------
-                    # MONTHLY HIGHLIGHTS (CLEAN)
-                    # ----------------------------
-                    std_dev = pivot_active.std(axis=1).sort_values()
-                    top_consistent = std_dev.head(3)
-                    
-                    avg_steps = pivot_active.mean(axis=1).sort_values(ascending=False)
-                    top_active = avg_steps.head(3)
-                    
-                    days_10k = (pivot_active >= 10000).sum(axis=1).sort_values(ascending=False)
-                    top_10k = days_10k.head(3)
-                    
-                    days_5k = ((pivot_active >= 5000) & (pivot_active < 10000)).sum(axis=1).sort_values(ascending=False)
-                    top_5k = days_5k.head(3)
-                    
-                    def slope(row):
-                        y = row.values
-                        x = np.arange(len(y))
-                        if np.all(y == 0):
-                            return 0
-                        return np.polyfit(x, y, 1)[0]
-                    
-                    slopes = pivot_active.apply(slope, axis=1).sort_values(ascending=False)
-                    top_improved = slopes.head(3)
-                
-                    td = monthly_records["top_days"]
-                
-                    if not td.empty:
-                        crown = " 👑" if monthly_records["day_record"] else ""
-                
-                    tw = monthly_records["top_weeks"]
-                
-                    if not tw.empty:
-                        crown = " 👑" if monthly_records["week_record"] else ""
-                    
-                    c1, c2 = st.columns(2)
-                    
-                    with c1:
-                        
-                        st.success(f"""🔥 **Highest steps in a day**
-                        
-                    {td.loc[0,'User']} — {int(td.loc[0,'steps']):,}{crown}  
-                    {td.loc[1,'User']} — {int(td.loc[1,'steps']):,}  
-                    {td.loc[2,'User']} — {int(td.loc[2,'steps']):,}
-                    """)
-                
-                        st.success(f"""🗓️ **Highest steps in a week**
-                        
-                    {tw.loc[0,'User']} — {int(tw.loc[0,'steps']):,}{crown}  
-                    {tw.loc[1,'User']} — {int(tw.loc[1,'steps']):,}  
-                    {tw.loc[2,'User']} — {int(tw.loc[2,'steps']):,}
-                    """)
-                
-                        st.info(f"""🏅 **10K crossed king / queen**
-                        
-                    {top_10k.index[0]} — {int(top_10k.iloc[0])} days  
-                    {top_10k.index[1]} — {int(top_10k.iloc[1])} days  
-                    {top_10k.index[2]} — {int(top_10k.iloc[2])} days
-                    """)
-                
-                        st.info(f"""🥈 **5K crossed king / queen** 
-                        
-                    {top_5k.index[0]} — {int(top_5k.iloc[0])} days  
-                    {top_5k.index[1]} — {int(top_5k.iloc[1])} days  
-                    {top_5k.index[2]} — {int(top_5k.iloc[2])} days
-                    """)
-                
-                    with c2:
-                        st.success(f"""🎯 **Most consistent**
-                        
-                    {top_consistent.index[0]} — {int(top_consistent.iloc[0]):,} std dev  
-                    {top_consistent.index[1]} — {int(top_consistent.iloc[1]):,}  
-                    {top_consistent.index[2]} — {int(top_consistent.iloc[2]):,}
-                    """)
-                    
-                        st.success(f"""⚡ **Highly active**
-                        
-                    {top_active.index[0]} — {int(top_active.iloc[0]):,} avg steps  
-                    {top_active.index[1]} — {int(top_active.iloc[1]):,} 
-                    {top_active.index[2]} — {int(top_active.iloc[2]):,}
-                    """)
-                    
-                        st.success(f"""🚀 **Most improved**
-                        
-                    {top_improved.index[0]} — {int(top_improved.iloc[0]):,} slope  
-                    {top_improved.index[1]} — {int(top_improved.iloc[1]):,} 
-                    {top_improved.index[2]} — {int(top_improved.iloc[2]):,}
-                    """)
-                    
-                    premier = month_lh[month_lh["League"] == "Premier"].sort_values("Rank")
-                    championship = month_lh[month_lh["League"] == "Championship"].sort_values("Rank")
-                    
-                    st.divider()
-                    st.markdown("###### 🏟️ League Tables")
-                    
-                    premier = month_lh[month_lh["League"] == "Premier"].sort_values("Rank")
-                    championship = month_lh[month_lh["League"] == "Championship"].sort_values("Rank")
-                    
-                    c1, c2 = st.columns(2)
-                    
-                    with c1:
-                        st.markdown("###### 🥇 Premier League")
-                        st.dataframe(
-                            premier[["Rank","User","points_display","Promoted","Relegated"]]
-                                .rename(columns={
-                                    "points_display": "Points",
-                                    "Promoted": "⬆",
-                                    "Relegated": "⬇"
-                                }),
-                            use_container_width=True,
-                            hide_index=True
-                        )
-                    
-                    with c2:
-                        st.markdown("###### 🥈 Championship")
-                        st.dataframe(
-                            championship[["Rank","User","points_display","Promoted","Relegated"]]
-                                .rename(columns={
-                                    "points_display": "Points",
-                                    "Promoted": "⬆",
-                                    "Relegated": "⬇"
-                                }),
-                            use_container_width=True,
-                            hide_index=True
-                        )
-                
-                    st.divider()
-                    st.markdown("###### ⚠️ Danger zone")
-                    
-                    bottom_prem = premier.sort_values("Rank").tail(2)
-                    top_champ = championship.sort_values("Rank").head(2)
-                    
-                    c1, c2 = st.columns(2)
-                    
-                    with c1:
-                        st.error("🔥 Premier relegation risk")
-                        for _, r in bottom_prem.iterrows():
-                            st.write(f"⬇ {r['User']} — {int(r['points_display'])} pts")
-                    
-                    with c2:
-                        st.success("🚀 Championship promotion push")
-                        for _, r in top_champ.iterrows():
-                            st.write(f"⬆ {r['User']} — {int(r['points_display'])} pts")
-                
-                
-                    st.divider()
-                    st.markdown("###### 📰 Monthly storylines")
-                    
-                    if "top_improved" in locals() and not top_improved.empty and not top_consistent.empty:
-                    
-                        dominator = monthly_totals.iloc[0]
-                        climber = top_improved.index[0] if len(top_improved) > 0 else "—"
-                        consistent = top_consistent.index[0]
-                        last_place = monthly_totals.iloc[-1]["User"]
-                    
-                        st.success(f"👑 **Dominant force:** {dominator['User']} ruled the month with {int(dominator['steps']):,} steps")
-                        st.info(f"🚀 **Biggest momentum:** {climber} showed the strongest improvement trend")
-                        st.warning(f"🧱 **Mr Consistent:** {consistent} was the steadiest performer this month")
-                        st.error(f"⚠️ **Needs a comeback:** {last_place} will be hungry next month")
-                    
-                    else:
-                        st.caption("Monthly storylines will appear once enough activity data is available.")
-                        
-                    # ----------------------------
-                    # Daily steps trend (this month)
-                    # ----------------------------
-                    
-                    st.markdown("###### 📈 Daily steps trend (this month)")
-                    # Rank users by monthly total
-                    user_totals = (
-                        month_df.groupby("User")["steps"]
-                        .sum()
-                        .sort_values(ascending=False)
-                    )
-                    
-                    top_users = user_totals.head(5).index.tolist()
-                    mode = st.radio(
-                        "View mode",
-                        ["Top 5 players", "Custom selection"],
-                        horizontal=True
-                    )
-                    
-                    # Selector
-                    selected_users = st.multiselect(
-                        "Select players to display",
-                        options=user_totals.index.tolist(),
-                        default=top_users,
-                        help="Default shows top performers. Select up to a few players for comparison."
-                    )
-                
-                    # Prepare daily data
-                    daily_trend = month_df.copy()
-                    daily_trend["day"] = daily_trend["date"].dt.day
-                    
-                    # Optional: only users who actually walked this month
-                    active_month_users = (
-                        daily_trend.groupby("User")["steps"]
-                        .sum()
-                        .loc[lambda x: x > 0]
-                        .index
-                    )
-                    
-                    daily_trend = daily_trend[
-                        daily_trend["User"].isin(active_month_users)
-                    ]
-                    daily_trend = month_df.copy()
-                    daily_trend["day"] = daily_trend["date"].dt.day
-                    
-                    daily_trend = daily_trend[
-                        daily_trend["User"].isin(selected_users)
-                    ]
-                
-                    fig_daily = px.line(
-                    daily_trend,
-                    x="day",
-                    y="steps",
-                    color="User",
-                    markers=False
-                    )
-                    
-                    fig_daily.update_layout(
-                        height=420,
-                        xaxis_title="Day of month",
-                        yaxis_title="Steps",
-                        hovermode="x unified",
-                        legend_title="Player"
-                    )
-                
-                    # Line chart
-                    fig_daily = px.line(
-                        daily_trend,
-                        x="day",
-                        y="steps",
-                        color="User",
-                        markers=False
-                    )
-                    
-                    fig_daily.update_layout(
-                        height=420,
-                        xaxis_title="Day of month",
-                        yaxis_title="Steps",
-                        legend_title="Player",
-                        hovermode="x unified"
-                    )
-                
-                    daily_trend["rolling"] = (
-                        daily_trend
-                        .groupby("User")["steps"]
-                        .rolling(3)
-                        .mean()
-                        .reset_index(level=0, drop=True)
-                    )
-                    mode = st.radio("View", ["Daily", "3-day average"], horizontal=True)
-                    y_col = "rolling" if mode == "3-day average" else "steps"
-                    st.plotly_chart(fig_daily, use_container_width=True)
-                
-                    # ----------------------------
-                    # LEADERBOARD
-                    # ----------------------------
-                    st.divider()
-                    st.markdown("###### 📊 Monthly leaderboard")
-                    
-                    fig = px.bar(
-                        monthly_totals,
-                        x="User",
-                        y="steps",
-                        text="steps"
-                    )
-                    
-                    fig.update_traces(texttemplate='%{text:,}', textposition='outside')
-                    fig.update_layout(
-                        xaxis_title="",
-                        yaxis_title="Steps",
-                        xaxis={'categoryorder': 'total descending'},
-                        height=500
-                    )
-                    
-                    st.plotly_chart(fig, use_container_width=True)
-                    #st.dataframe(monthly_totals, use_container_width=True, hide_index=True)
-                
-                    if month_df["steps"].sum() == 0:
-                        st.info("📭 Data not available yet for this month.")
-                        st.stop()
-                
-                    # =========================================================
-                    # 🏟️ TEAM MONTH SNAPSHOT (EMBEDDED DELTAS)
-                    # =========================================================
-                    
-                    current_stats = team_month_stats(df, selected_month, active_users)
-                    prev_month = selected_month - 1
-                    prev_stats = team_month_stats(df, prev_month, active_users)
-                    
-                    st.divider()
-                    st.markdown("##### 🏟️ Team month snapshot")
-                    
-                    if current_stats:
-                    
-                        # ----------- safe defaults -----------
-                        step_delta = None
-                        avg_delta = None
-                    
-                        if prev_stats and prev_stats["total_steps"] > 0 and prev_stats["team_avg"] > 0:
-                            step_delta = ((current_stats["total_steps"] - prev_stats["total_steps"]) / prev_stats["total_steps"]) * 100
-                            avg_delta = ((current_stats["team_avg"] - prev_stats["team_avg"]) / prev_stats["team_avg"]) * 100
-                    
-                        c1, c2, c3 = st.columns(3)
-                    
-                        # 👣 TEAM STEPS
-                        c1.metric(
-                            "👣 Team steps",
-                            f"{current_stats['total_steps']:,}",
-                            delta=f"{step_delta:+.1f}%" if step_delta is not None else None,
-                            delta_color="normal"   # green up, red down (what you want)
-                        )
-                    
-                        # 👥 ACTIVE PLAYERS
-                        c2.metric(
-                            "👥 Active players",
-                            current_stats["players"]
-                        )
-                    
-                        # 📊 TEAM DAILY AVERAGE
-                        c3.metric(
-                            "📊 Team daily average",
-                            f"{current_stats['team_avg']:,}",
-                            delta=f"{avg_delta:+.1f}%" if avg_delta is not None else None,
-                            delta_color="normal"
-                        )
-                    
-                        # ----------- Team form line -----------
-                        if step_delta is not None:
-                            if step_delta > 10:
-                                form = "🔥 The league is on fire this month!"
-                            elif step_delta > 3:
-                                form = "🚀 Strong team momentum building"
-                            elif step_delta < -10:
-                                form = "🥶 Tough month for the league"
-                            elif step_delta < -3:
-                                form = "⚠️ Slight team slowdown"
-                            else:
-                                form = "➖ Stable and steady month"
-                    
-                            st.caption(form)
-                    
-                    else:
-                        st.info("Team stats not available for this month yet.")
+                        form = "➖ Stable and steady month"
+            
+                    st.caption(form)
+            
+            else:
+                st.info("Team stats not available for this month yet.")
 
 
 # =========================================================
