@@ -2179,7 +2179,7 @@ st.markdown("<div style='height: 8px'></div>", unsafe_allow_html=True)
 # =========================================================
 # 🏆 HALL OF FAME — ALL TIME RECORDS
 # =========================================================
-if page == "🏆 Hall of Fame":
+if page == "Hall of Fame":
 
     st.markdown("#### 🏆 Hall of Fame — All Time Records")
     st.caption("Since the inception of the Steps League")
