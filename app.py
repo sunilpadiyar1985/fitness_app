@@ -167,11 +167,8 @@ st.markdown("""
 /* =========================
    HIDE STREAMLIT DEFAULT UI
 ========================= */
-#MainMenu, footer, header {
-    visibility: hidden;
-}
-header { display: none !important; }
-button[kind="header"] { display: none !important; }
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
 
 /* =========================
    GLOBAL
