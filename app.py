@@ -22,13 +22,13 @@ if "page" not in st.session_state:
 def render_navbar():
 
     pages = [
-        "Monthly Results",
-        "Player Profile",
-        "Hall of Fame",
-        "League History",
-        "Wrapped",
-        "Readme", 
-        "🔄Refresh"
+        "Results",
+        "Players",
+        "Records",
+        "History",
+        "Wrap",
+        "ReadMe", 
+        "🔄"
     ]
 
     st.markdown('<div class="navbar-container">', unsafe_allow_html=True)
@@ -2186,7 +2186,7 @@ st.markdown("""
 # =========================================================
 # 🏆 HALL OF FAME — ALL TIME RECORDS
 # =========================================================
-if page == "Hall of Fame":
+if page == "Records":
 
     content = st.container()
     
@@ -2404,7 +2404,7 @@ if page == "Hall of Fame":
 # =========================================================
 # 👤 MONTHLY RESULT PAGE
 # =========================================================
-if page == "Monthly Results":
+if page == "Results":
     content = st.container()
     
     with content:
@@ -2937,7 +2937,7 @@ if page == "Monthly Results":
 # =========================================================
 # 👤 PLAYER PROFILE PAGE
 # =========================================================
-if page == "Player Profile":
+if page == "Players":
     content = st.container()
     
     with content:
@@ -3396,7 +3396,7 @@ if page == "Player Profile":
 # =========================================================
 
 
-if page == "League History":
+if page == "History":
     content = st.container()
     
     with content:
@@ -3746,7 +3746,7 @@ if page == "League History":
 # =========================================================
 # Wrapped
 # =========================================================
-if page == "Wrapped":
+if page == "Wrap":
 
     content = st.container()
     
@@ -3770,7 +3770,7 @@ if page == "Wrapped":
 # =========================================================
 # ℹ️ ABOUT — STEPS LEAGUE README
 # =========================================================
-if page == "Readme":
+if page == "ReadMe":
 
     content = st.container()
     
