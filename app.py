@@ -52,7 +52,7 @@ def render_navbar():
                 use_container_width=True,  # ✅ IMPORTANT
                 type="primary" if st.session_state.page == p else "secondary"
             ):
-                if p == "🔄 Refresh":
+                if p == "🔄":
                     st.cache_data.clear()
                     st.cache_resource.clear()
                 
