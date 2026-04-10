@@ -17,7 +17,7 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 if "page" not in st.session_state:
-    st.session_state.page = "Monthly Results"
+    st.session_state.page = "Results"
     
 def render_navbar():
 
