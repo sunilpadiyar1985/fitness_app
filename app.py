@@ -49,20 +49,22 @@ def render_navbar():
         for i, p in enumerate(pages):
             if nav_cols[i].button(
                 p,
-                use_container_width=True,  # ✅ IMPORTANT
+                use_container_width=True,
                 type="primary" if st.session_state.page == p else "secondary"
             ):
                 if p == "🔄":
                     st.cache_data.clear()
                     st.cache_resource.clear()
-                
-                    # Reset only data-related state (optional)
+            
                     keys_to_keep = ["page"]
                     for key in list(st.session_state.keys()):
                         if key not in keys_to_keep:
                             del st.session_state[key]
-                
+            
                     st.rerun()
+                else:
+                    st.session_state.page = p   # ✅ THIS LINE WAS MISSING
+                    st.rerun()                  # ✅ force refresh
 
     # RIGHT SIDE
     #with cols[2]:
@@ -73,8 +75,8 @@ def render_navbar():
 
     st.markdown('</div>', unsafe_allow_html=True)
     
-render_navbar()
 page = st.session_state.page
+render_navbar()
 
 st.set_page_config(page_title="Unbroken Tribe - Steps league and more", page_icon="🏃", layout="wide", )
 if not st.session_state.get("is_admin", False):
