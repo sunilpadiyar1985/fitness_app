@@ -403,13 +403,13 @@ def load_data_supabase():
     try:
         all_rows = []
         start = 0
-        batch_size = 5000
+        batch_size = 1000
 
         while True:
             response = (
                 supabase
                 .table("daily_health_metrics")
-                .select("*")
+                .select("user_id,date,value,metric")
                 .range(start, start + batch_size - 1)
                 .execute()
             )
