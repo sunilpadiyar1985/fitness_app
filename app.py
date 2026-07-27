@@ -409,7 +409,7 @@ def load_data_supabase():
             response = (
                 supabase
                 .table("daily_health_metrics")
-                .select("user_id,date,value,metric")
+                .select("*")
                 .range(start, start + batch_size - 1)
                 .execute()
             )
