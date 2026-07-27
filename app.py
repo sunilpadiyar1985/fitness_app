@@ -403,13 +403,13 @@ def load_data_supabase():
     try:
         all_rows = []
         start = 0
-        batch_size = 1000
+        batch_size = 5000
 
         while True:
             response = (
                 supabase
                 .table("daily_health_metrics")
-                .select("*")
+                .select("user_id,date,value,metric")
                 .range(start, start + batch_size - 1)
                 .execute()
             )
@@ -1181,11 +1181,18 @@ def build_all_user_streaks(df):
     return streaks
 
 raw_df = load_data_supabase()
+st.sidebar.write("Rows:", len(raw_df))
+if raw_df.empty:
+    st.error("Unable to load data from Supabase.")
+    st.stop()
 all_streaks = build_all_user_streaks(raw_df)
 st.sidebar.caption(f"📦 Rows loaded: {len(raw_df):,}")
 st.sidebar.write("Max date:", raw_df["date"].max())
 last_sync = raw_df["date"].max()
-st.sidebar.caption(f"🕒 Last data date: {last_sync.date()}")
+if pd.notna(last_sync):
+    st.sidebar.caption(f"🕒 Last data date: {last_sync.date()}")
+else:
+    st.sidebar.caption("🕒 Last data date: unavailable")
 raw_df = raw_df.sort_values(["User", "date"]).reset_index(drop=True)
 monthly_df = build_monthly_df(raw_df)
 
