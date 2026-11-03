@@ -2598,8 +2598,10 @@ if page == "Results":
             # ----------------------------
             # MONTHLY HIGHLIGHTS (CLEAN)
             # ----------------------------
-            std_dev = pivot_active.std(axis=1).sort_values()
-            top_consistent = std_dev.head(3)
+            std_dev = pivot_active.std(axis=1), ddof=0)
+            std_dev = std_dev.replace([np.inf, -np.inf], np.nan).dropna()
+            
+            top_consistent = std_dev.sort_values().head(3)
             
             avg_steps = pivot_active.mean(axis=1).sort_values(ascending=False)
             top_active = avg_steps.head(3)
@@ -2683,12 +2685,17 @@ if page == "Results":
             """)
         
             with c2:
+
+            if not top_consistent.empty:
+                consistency_text = "\n".join(
+                    f"{user} - {int(value):,} std dev"
+                    for user, value in top_consistent.items()
+                )
                 st.success(f"""🎯 **Most consistent**
-                
-            {top_consistent.index[0]} — {int(top_consistent.iloc[0]):,} std dev  
-            {top_consistent.index[1]} — {int(top_consistent.iloc[1]):,}  
-            {top_consistent.index[2]} — {int(top_consistent.iloc[2]):,}
+            {consistency_text}
             """)
+            else:
+                st.info("Not enough valid data to calculate consistency.")
             
                 st.success(f"""⚡ **Highly active**
                 
