@@ -2631,7 +2631,7 @@ if page == "Results":
                 # generate  x values for valid observations
                 x = np.arrange(len(y), dtype=float)
 
-                $ Calculate slope safely
+                # Calculate slope safely
                 try: 
                     return float(np.polyfit(x, y, 1)[0])
                 except np.linalg.LinAlgError: 
