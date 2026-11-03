@@ -2629,7 +2629,7 @@ if page == "Results":
                     return 0.0
 
                 # generate  x values for valid observations
-                x = np.arrange(len(y), dtype(float)
+                x = np.arrange(len(y), dtype=float)
 
                 $ Calculate slope safely
                 try: 
