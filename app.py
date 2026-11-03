@@ -2598,7 +2598,7 @@ if page == "Results":
             # ----------------------------
             # MONTHLY HIGHLIGHTS (CLEAN)
             # ----------------------------
-            std_dev = pivot_active.std(axis=1), ddof=0)
+            std_dev = pivot_active.std(axis=1, ddof=0)
             std_dev = std_dev.replace([np.inf, -np.inf], np.nan).dropna()
             
             top_consistent = std_dev.sort_values().head(3)
