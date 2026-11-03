@@ -2611,12 +2611,32 @@ if page == "Results":
             top_5k = days_5k.head(3)
             
             def slope(row):
-                y = row.values
-                x = np.arange(len(y))
+                # convert to number and remove invalid values
+                y = pd.to_numberic(row, errors="coerce").to_numpy(dtype=float)
+
+                #keep only finie values
+                valid = np.isfinite(y)
+
+                #not enough valid values to calculate a trend
+                if valid.sum() < 2:
+                    return 0.0
+
+                #Use only valid observations 
+                y = y[valid]
+
+                #If all values are zero, there is no trend
                 if np.all(y == 0):
-                    return 0
-                return np.polyfit(x, y, 1)[0]
-            
+                    return 0.0
+
+                # generate  x values for valid observations
+                x = np.arrange(len(y), dtype(float)
+
+                $ Calculate slope safely
+                try: 
+                    return float(np.polyfit(x, y, 1)[0])
+                except np.linalg.LinAlgError: 
+                    return 0.0
+                 
             slopes = pivot_active.apply(slope, axis=1).sort_values(ascending=False)
             top_improved = slopes.head(3)
         
