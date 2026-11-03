@@ -2686,23 +2686,23 @@ if page == "Results":
         
             with c2:
 
-            if not top_consistent.empty:
-                consistency_text = "\n".join(
-                    f"{user} - {int(value):,} std dev"
-                    for user, value in top_consistent.items()
-                )
-                st.success(f"""🎯 **Most consistent**
-            {consistency_text}
-            """)
-            else:
-                st.info("Not enough valid data to calculate consistency.")
-            
-                st.success(f"""⚡ **Highly active**
+                if not top_consistent.empty:
+                    consistency_text = "\n".join(
+                        f"{user} - {int(value):,} std dev"
+                        for user, value in top_consistent.items()
+                    )
+                    st.success(f"""🎯 **Most consistent**
+                {consistency_text}
+                """)
+                else:
+                    st.info("Not enough valid data to calculate consistency.")
                 
-            {top_active.index[0]} — {int(top_active.iloc[0]):,} avg steps  
-            {top_active.index[1]} — {int(top_active.iloc[1]):,} 
-            {top_active.index[2]} — {int(top_active.iloc[2]):,}
-            """)
+                    st.success(f"""⚡ **Highly active**
+                    
+                {top_active.index[0]} — {int(top_active.iloc[0]):,} avg steps  
+                {top_active.index[1]} — {int(top_active.iloc[1]):,} 
+                {top_active.index[2]} — {int(top_active.iloc[2]):,}
+                """)
             
                 st.success(f"""🚀 **Most improved**
                 
