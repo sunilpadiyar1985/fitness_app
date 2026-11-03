@@ -2612,7 +2612,7 @@ if page == "Results":
             
             def slope(row):
                 # convert to number and remove invalid values
-                y = pd.to_numberic(row, errors="coerce").to_numpy(dtype=float)
+                y = pd.to_numeric(row, errors="coerce").to_numpy(dtype=float)
 
                 #keep only finie values
                 valid = np.isfinite(y)
